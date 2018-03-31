@@ -1,101 +1,78 @@
-RED = 1
-YELLOW = 2
-GREEN = 3
-BLUE = 4
-ORANGE = 5
-WHITE = 6
+from colorama import Back, Style, Fore
 
-COLORS = {RED: "R", YELLOW: "Y", GREEN: "G", BLUE: "B", ORANGE: "O", WHITE: "W"}
+
+class Color(object):
+
+    def __init__(self, n, char, colorcode):
+
+        self.n = n
+        self.char = char
+        self.colorcode = colorcode
+
+    def opposite(self):
+
+        return OPPOSITES.get(self)
+
+    def __repr__(self):
+
+        return Style.BRIGHT + Fore.BLACK + self.colorcode + self.char + Style.RESET_ALL
+
+
+RED = Color(1, "R", Back.RED)
+YELLOW = Color(2, "Y", Back.LIGHTYELLOW_EX)
+GREEN = Color(3, "G", Back.GREEN)
+BLUE = Color(4, "B", Back.BLUE)
+ORANGE = Color(5, "O", Back.LIGHTRED_EX)
+WHITE = Color(6, "W", Back.WHITE)
+COLORS = [RED, YELLOW, GREEN, BLUE, ORANGE, WHITE]
+OPPOSITES = {RED: ORANGE, ORANGE: RED, YELLOW: WHITE, WHITE: YELLOW, BLUE: GREEN, GREEN: BLUE}
 
 
 class Cube(object):
 
-    front=None
-    back=None
-    top=None
-    bottom=None
-    left=None
-    right=None
+    def __init__(self, front, back, left, right, top, bottom):
 
-    def __init__(self):
+        self.front = front
+        self.back = back
+        self.top = top
+        self.bottom = bottom
+        self.left = left
+        self.right = right
 
-        pass
+    def __repr__(self):
 
-    def __init__(self, front, back, top, bottom, left, right):
+        return "Front\n" + str(self.front) + \
+                "Back\n" + str(self.back) + \
+                "Left\n" + str(self.left) + \
+                "Right\n" + str(self.right) + \
+                "Top\n" + str(self.top) + \
+                "Bottom\n" + str(self.bottom)
 
-        self.front=front
-        self.back=back
-        self.top=top
-        self.button=bottom
-        self.left=left
-        self.right=right
-
-    pass
 
 class Side(object):
 
-    cubies = None
+    @staticmethod
+    def create_unicolor_side(color):
+
+        return Side([[color, color, color],
+                     [color, color, color],
+                     [color, color, color]])
 
     def __init__(self, cubies):
 
-        self.cubies=cubies
+        isinstance(cubies, list)
+
+        self.cubies = cubies
 
     def __repr__(self):
         output = ""
         for r in self.cubies:
-            for c in r:
-                output += COLORS.get(c)
-
+            for color in r:
+                output += str(color) + " "
             output += "\n"
 
         return output
 
-class Cubie(object):
+    def center_color(self):
 
-    s1 = None
-    s2 = None
-    s3 = None
-
-    def __init__(self, s1, s2=None, s3=None):
-        self.s1 = s1
-        self.s2 = s2
-        self.s3 = s3
-
-    def __repr__(self):
-
-        if self.is_center:
-
-            return "Center"
-
-        elif self.is_side:
-
-            return "Side"
-
-        return "Corner"
-
-    @property
-    def is_center(self):
-
-        if self.s1 is not None and self.s2 is None and self.s3 is None:
-
-            return True
-
-        return False
-
-    @property
-    def is_side(self):
-
-        if self.s1 is not None and self.s2 is not None and self.s3 is None:
-
-            return True
-
-        return False
-
-    @property
-    def is_corner(self):
-
-        if self.s1 is not None and self.s2 is not None and self.s3 is not None:
-
-            return True
-
-        return False
+        return self.cubies[1][1]
