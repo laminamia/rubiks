@@ -5,24 +5,58 @@ BLUE = 4
 ORANGE = 5
 WHITE = 6
 
+COLORS = {RED: "R", YELLOW: "Y", GREEN: "G", BLUE: "B", ORANGE: "O", WHITE: "W"}
+
 
 class Cube(object):
 
+    front=None
+    back=None
+    top=None
+    bottom=None
+    left=None
+    right=None
+
+    def __init__(self):
+
+        pass
+
+    def __init__(self, front, back, top, bottom, left, right):
+
+        self.front=front
+        self.back=back
+        self.top=top
+        self.button=bottom
+        self.left=left
+        self.right=right
+
     pass
 
+class Side(object):
 
-class Piece(object):
+    cubies = None
+
+    def __init__(self, cubies):
+
+        self.cubies=cubies
+
+    def __repr__(self):
+        output = ""
+        for r in self.cubies:
+            for c in r:
+                output += COLORS.get(c)
+
+            output += "\n"
+
+        return output
+
+class Cubie(object):
 
     s1 = None
     s2 = None
     s3 = None
 
     def __init__(self, s1, s2=None, s3=None):
-        """
-        :type s1: int
-        :type s2: int
-        :type s3: int
-        """
         self.s1 = s1
         self.s2 = s2
         self.s3 = s3

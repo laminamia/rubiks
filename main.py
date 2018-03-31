@@ -1,5 +1,7 @@
 import rubiks
 
-piece = rubiks.Piece(rubiks.RED)
+front = rubiks.Side([[rubiks.BLUE, rubiks.BLUE, rubiks.BLUE],
+                     [rubiks.BLUE, rubiks.BLUE, rubiks.BLUE],
+                     [rubiks.BLUE, rubiks.BLUE, rubiks.BLUE]])
 
-print piece
+print(front)
