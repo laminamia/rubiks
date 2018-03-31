@@ -1,4 +1,5 @@
-son = "Ephraim"
-adjective = "awesome"
+import rubiks
 
-print son + " " + "is " + adjective
+piece = rubiks.Piece(rubiks.RED)
+
+print piece
