@@ -1,5 +1,6 @@
-from colorama import Back, Style, Fore
+from _ctypes import Array
 
+from colorama import Back, Style, Fore
 
 class Color(object):
 
@@ -69,34 +70,98 @@ class Cube(object):
                 "Bottom\n" + str(self.bottom)
 
     def rotate_front_cw(self):
+        # rotate pieces that change on other faces
+        for i in [0, 1, 2]:
+            # save right before it is rewritten
+            _right = self.right.cubies[i][0]
 
-        _right_first_column = []
+            # fix right: top last row -> right first column
+            self.right.cubies[i][0] = self.top.cubies[2][i]
 
-        # save right first column
-        for i in [0, 1, 2]: _right_first_column.append(self.right.cubies[i][0])
+            # fix top: left last column -> top last row
+            self.top.cubies[2][i] = self.left.cubies[i][2]
 
-        # fix right
-        # top side last row is adjacent to front side
-        # swap each item in top last row to first item of each row of right side
-        for i in [0, 1, 2]: self.right.cubies[i][0] = self.top.cubies[2][i]
+            # fix left: bottom first row ->
+            # bottom side first row is adjacent to front last row
+            # swap each item in bottom first row to last item of each row of left side
+            self.left.cubies[i][2] = self.bottom.cubies[0][i]
 
-        # fix top
-        # top side last row is adjacent to front top row
-        # left side each item in last column should become last row of top side
-        for i in [0, 1, 2]: self.top.cubies[2][i] = self.left.cubies[i][2]
+            # fix bottom
+            # right side first column is adjacent to front
+            # swap each item in right first column to first row of bottom
+            self.bottom.cubies[0][i] = _right
 
-        # fix left
-        # bottom side first row is adjacent to front last row
-        # swap each item in bottom first row to last item of each row of left side
-        for i in [0, 1, 2]: self.left.cubies[i][2] = self.bottom.cubies[2][i]
+        # rotate turned face pieces - middles
+        # save right middle
+        _temp = self.front.cubies[1][2]
+        # top middle to right middle
+        self.front.cubies[1][2] = self.front.cubies[0][1]
+        # left middle to top middle
+        self.front.cubies[0][1] = self.front.cubies[1][0]
+        # bottom middle to left middle
+        self.front.cubies[1][0] = self.front.cubies[2][1]
+        # right middle to bottom middle
+        self.front.cubies[2][1] = _temp
 
-        # fix bottom
-        # right side first column is adjacent to front
-        # swap each item in right first column to first row of bottom
-        for i in [0, 1, 2]: self.bottom.cubies[0][i] = _right_first_column[i]
+        # rotate turned face pieces - corners
+        # save top right
+        _temp = self.front.cubies[0][2]
+        # top left to top right
+        self.front.cubies[0][2] = self.front.cubies[0][0]
+        # bottom left to top left
+        self.front.cubies[0][0] = self.front.cubies[2][0]
+        # bottom right to bottom left
+        self.front.cubies[2][0] = self.front.cubies[2][2]
+        # top right to bottom right
+        self.front.cubies[2][2] = _temp
+
+    def rotate_front_ccw(self):
+
+        # rotate pieces that change on other faces
+        for i in [0, 1, 2]:
+            # save right before it is rewritten
+            _temp = self.right.cubies[i][0]
+
+            # fix right: bottom first row -> right first column
+            self.right.cubies[i][0] = self.bottom.cubies[0][i]
+
+            # fix bottom: left last column -> bottom first row
+            self.bottom.cubies[0][i] = self.left.cubies[i][2]
+
+            # fix left: top last row -> left last column
+            self.left.cubies[i][2] = self.top.cubies[2][i]
+
+            # fix top: right first column -> top last row
+            self.top.cubies[2][i] = _temp
+
+        # rotate turned face pieces - middles
+        # save right middle
+        _temp = self.front.cubies[1][2]
+        # bottom middle to right middle
+        self.front.cubies[1][2] = self.front.cubies[2][1]
+        # left middle to bottom middle
+        self.front.cubies[2][1] = self.front.cubies[1][0]
+        # top middle to left middle
+        self.front.cubies[1][0] = self.front.cubies[0][1]
+        # right middle to top middle
+        self.front.cubies[0][1] = _temp
+
+        # rotate turned face pieces - corners
+        # save top right
+        _temp = self.front.cubies[0][2]
+        # bottom right to top right
+        self.front.cubies[0][2] = self.front.cubies[2][2]
+        # bottom left to bottom right
+        self.front.cubies[2][2] = self.front.cubies[2][0]
+        # top left to bottom left
+        self.front.cubies[2][0] = self.front.cubies[0][0]
+        # top right to top left
+        self.front.cubies[0][0] = _temp
 
 
 class Side(object):
+
+    # todo Consider using numpy arrays instead
 
     @staticmethod
     def create_unicolor_side(color):
@@ -105,8 +170,13 @@ class Side(object):
                      [color, color, color],
                      [color, color, color]])
 
+    @staticmethod
+    def create_copy(side):
+        return Side([list(side.get_row(0)), list(side.get_row(1)), list(side.get_row(2))])
+
     def __init__(self, cubies):
 
+        # todo get rid of these assertions
         isinstance(cubies, list)
 
         assert len(cubies) == 3
@@ -126,6 +196,17 @@ class Side(object):
     def center_color(self):
 
         return self.cubies[1][1]
+
+    def get_row(self, row_idx):
+
+        return self.cubies[row_idx]
+
+    def get_column(self, col_idx):
+
+        column = []
+        for i in range(3):
+            column.append(self.cubies[i][col_idx])
+        return column
 
     def __eq__(self, other):
 
