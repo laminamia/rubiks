@@ -69,6 +69,17 @@ class Cube(object):
                 "Top\n" + str(self.top) + \
                 "Bottom\n" + str(self.bottom)
 
+    def rotate_cube_right(self, num_times):
+        for i in range(num_times):
+            rotate_cube_right;
+
+    def rotate_cube_right(self):
+        _temp = self.front
+        self.front = self.left
+        self.left = self.back
+        self.back = self.right
+        self.right = _temp
+
     def rotate_front_cw(self):
         # rotate pieces that change on other faces
         for i in [0, 1, 2]:

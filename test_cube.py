@@ -85,7 +85,7 @@ class TestCube(unittest.TestCase):
                          bottom=rubiks.Side.create_copy(bottom))
 
         c1.rotate_front_ccw()
-        
+
         logging.getLogger().warning("Right\n%r", c1.right)
         logging.getLogger().warning("Bottom\n%r", c1.bottom)
         logging.getLogger().warning("Left\n%r", c1.left)
@@ -99,6 +99,54 @@ class TestCube(unittest.TestCase):
         self.assertEqual(left.get_column(2), c1.bottom.get_row(0))
         self.assertEqual(back, c1.back)
 
+        self.assertEqual(c1.front, rubiks.Side([[rubiks.RED, rubiks.BLUE, rubiks.WHITE],
+                                                [rubiks.WHITE, rubiks.BLUE, rubiks.GREEN],
+                                                [rubiks.YELLOW, rubiks.RED, rubiks.GREEN]]))
+
+    def test_rotate_cube_right(self):
+        # Make up some random sides
+        front = rubiks.Side([[rubiks.YELLOW, rubiks.WHITE, rubiks.RED],
+                             [rubiks.RED, rubiks.BLUE, rubiks.BLUE],
+                             [rubiks.GREEN, rubiks.GREEN, rubiks.WHITE]])
+        back = rubiks.Side([[rubiks.RED, rubiks.YELLOW, rubiks.ORANGE],
+                            [rubiks.GREEN, rubiks.GREEN, rubiks.WHITE],
+                            [rubiks.GREEN, rubiks.ORANGE, rubiks.WHITE]])
+        left = rubiks.Side([[rubiks.BLUE, rubiks.GREEN, rubiks.RED],
+                            [rubiks.RED, rubiks.RED, rubiks.GREEN],
+                            [rubiks.RED, rubiks.BLUE, rubiks.WHITE]])
+        right = rubiks.Side([[rubiks.BLUE, rubiks.ORANGE, rubiks.YELLOW],
+                             [rubiks.YELLOW, rubiks.ORANGE, rubiks.WHITE],
+                             [rubiks.ORANGE, rubiks.YELLOW, rubiks.ORANGE]])
+        top = rubiks.Side([[rubiks.YELLOW, rubiks.ORANGE, rubiks.GREEN],
+                           [rubiks.ORANGE, rubiks.WHITE, rubiks.WHITE],
+                           [rubiks.BLUE, rubiks.BLUE, rubiks.WHITE]])
+        bottom = rubiks.Side([[rubiks.ORANGE, rubiks.YELLOW, rubiks.BLUE],
+                              [rubiks.RED, rubiks.YELLOW, rubiks.RED],
+                              [rubiks.GREEN, rubiks.BLUE, rubiks.YELLOW]])
+
+        # use copies in cube because the lists will be modified by cube manipulation
+        c1 = rubiks.Cube(front=rubiks.Side.create_copy(front),
+                         back=rubiks.Side.create_copy(back),
+                         left=rubiks.Side.create_copy(left),
+                         right=rubiks.Side.create_copy(right),
+                         top=rubiks.Side.create_copy(top),
+                         bottom=rubiks.Side.create_copy(bottom))
+
+        c1.rotate_cube_right()
+
+        logging.getLogger().warning("Right\n%r", c1.right)
+        logging.getLogger().warning("Bottom\n%r", c1.bottom)
+        logging.getLogger().warning("Left\n%r", c1.left)
+        logging.getLogger().warning("Top\n%r", c1.top)
+        logging.getLogger().warning("Front\n%r", c1.front)
+        logging.getLogger().warning("Back\n%r", c1.back)
+
+        self.assertEqual(front, c1.right)
+        self.assertEqual(right, c1.back)
+        self.assertEqual(back, c1.left)
+        self.assertEqual(left, c1.front)
+
+        # bottom and top
         self.assertEqual(c1.front, rubiks.Side([[rubiks.RED, rubiks.BLUE, rubiks.WHITE],
                                                 [rubiks.WHITE, rubiks.BLUE, rubiks.GREEN],
                                                 [rubiks.YELLOW, rubiks.RED, rubiks.GREEN]]))
