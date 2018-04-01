@@ -2,27 +2,23 @@ from _ctypes import Array
 
 from colorama import Back, Style, Fore
 
+
 class Color(object):
 
     def __init__(self, char, colorcode):
-
         self.char = char
         self.colorcode = colorcode
 
     def opposite(self):
-
         return OPPOSITES.get(self)
 
     def __repr__(self):
-
         return Style.BRIGHT + Fore.BLACK + self.colorcode + self.char + Style.RESET_ALL
 
     def __eq__(self, other):
-
         return self.char == other.char
 
     def __hash__(self):
-
         return self.char.__hash__()
 
 
@@ -52,7 +48,6 @@ class Cube(object):
         return Cube(front, back, left, right, top, bottom)
 
     def __init__(self, front, back, left, right, top, bottom):
-
         self.front = front
         self.back = back
         self.top = top
@@ -60,25 +55,28 @@ class Cube(object):
         self.left = left
         self.right = right
 
-    def __repr__(self):
+    def rotate_cube_right(self, num_times=1):
+        for i in range(num_times % 4):
+            _temp = self.front
+            self.front = self.left
+            self.left = self.back
+            self.back = self.right
+            self.right = _temp
+            self.top.rotate_face_colors_ccw()
+            self.bottom.rotate_face_colors_cw()
 
-        return "Front\n" + str(self.front) + \
-                "Back\n" + str(self.back) + \
-                "Left\n" + str(self.left) + \
-                "Right\n" + str(self.right) + \
-                "Top\n" + str(self.top) + \
-                "Bottom\n" + str(self.bottom)
-
-    def rotate_cube_right(self, num_times):
-        for i in range(num_times):
-            rotate_cube_right;
-
-    def rotate_cube_right(self):
-        _temp = self.front
-        self.front = self.left
-        self.left = self.back
-        self.back = self.right
-        self.right = _temp
+    def rotate_cube_left(self, num_times=1):
+        n = num_times % 4
+        if n == 0:
+            return
+        elif n == 1:
+            self.rotate_cube_right(3)
+        elif n == 2:
+            self.rotate_cube_right(2)
+        elif n == 3:
+            self.rotate_cube_right(1)
+        else:
+            return
 
     def rotate_front_cw(self):
         # rotate pieces that change on other faces
@@ -102,29 +100,7 @@ class Cube(object):
             # swap each item in right first column to first row of bottom
             self.bottom.cubies[0][i] = _right
 
-        # rotate turned face pieces - middles
-        # save right middle
-        _temp = self.front.cubies[1][2]
-        # top middle to right middle
-        self.front.cubies[1][2] = self.front.cubies[0][1]
-        # left middle to top middle
-        self.front.cubies[0][1] = self.front.cubies[1][0]
-        # bottom middle to left middle
-        self.front.cubies[1][0] = self.front.cubies[2][1]
-        # right middle to bottom middle
-        self.front.cubies[2][1] = _temp
-
-        # rotate turned face pieces - corners
-        # save top right
-        _temp = self.front.cubies[0][2]
-        # top left to top right
-        self.front.cubies[0][2] = self.front.cubies[0][0]
-        # bottom left to top left
-        self.front.cubies[0][0] = self.front.cubies[2][0]
-        # bottom right to bottom left
-        self.front.cubies[2][0] = self.front.cubies[2][2]
-        # top right to bottom right
-        self.front.cubies[2][2] = _temp
+        self.front.rotate_face_colors_cw()
 
     def rotate_front_ccw(self):
 
@@ -145,29 +121,16 @@ class Cube(object):
             # fix top: right first column -> top last row
             self.top.cubies[2][i] = _temp
 
-        # rotate turned face pieces - middles
-        # save right middle
-        _temp = self.front.cubies[1][2]
-        # bottom middle to right middle
-        self.front.cubies[1][2] = self.front.cubies[2][1]
-        # left middle to bottom middle
-        self.front.cubies[2][1] = self.front.cubies[1][0]
-        # top middle to left middle
-        self.front.cubies[1][0] = self.front.cubies[0][1]
-        # right middle to top middle
-        self.front.cubies[0][1] = _temp
+        self.front.rotate_face_colors_ccw()
 
-        # rotate turned face pieces - corners
-        # save top right
-        _temp = self.front.cubies[0][2]
-        # bottom right to top right
-        self.front.cubies[0][2] = self.front.cubies[2][2]
-        # bottom left to bottom right
-        self.front.cubies[2][2] = self.front.cubies[2][0]
-        # top left to bottom left
-        self.front.cubies[2][0] = self.front.cubies[0][0]
-        # top right to top left
-        self.front.cubies[0][0] = _temp
+    def __repr__(self):
+
+        return "Front\n" + str(self.front) + \
+               "Back\n" + str(self.back) + \
+               "Left\n" + str(self.left) + \
+               "Right\n" + str(self.right) + \
+               "Top\n" + str(self.top) + \
+               "Bottom\n" + str(self.bottom)
 
 
 class Side(object):
@@ -218,6 +181,60 @@ class Side(object):
         for i in range(3):
             column.append(self.cubies[i][col_idx])
         return column
+
+    def rotate_face_colors_ccw(self):
+        # rotate turned face pieces - middles
+        # save right middle
+        _temp = self.cubies[1][2]
+        # bottom middle to right middle
+        self.cubies[1][2] = self.cubies[2][1]
+        # left middle to bottom middle
+        self.cubies[2][1] = self.cubies[1][0]
+        # top middle to left middle
+        self.cubies[1][0] = self.cubies[0][1]
+        # right middle to top middle
+        self.cubies[0][1] = _temp
+
+        # rotate turned face pieces - corners
+        # save top right
+        _temp = self.cubies[0][2]
+        # bottom right to top right
+        self.cubies[0][2] = self.cubies[2][2]
+        # bottom left to bottom right
+        self.cubies[2][2] = self.cubies[2][0]
+        # top left to bottom left
+        self.cubies[2][0] = self.cubies[0][0]
+        # top right to top left
+        self.cubies[0][0] = _temp
+
+        return self
+
+    def rotate_face_colors_cw(self):
+        # rotate turned face pieces - middles
+        # save right middle
+        _temp = self.cubies[1][2]
+        # top middle to right middle
+        self.cubies[1][2] = self.cubies[0][1]
+        # left middle to top middle
+        self.cubies[0][1] = self.cubies[1][0]
+        # bottom middle to left middle
+        self.cubies[1][0] = self.cubies[2][1]
+        # right middle to bottom middle
+        self.cubies[2][1] = _temp
+
+        # rotate turned face pieces - corners
+        # save top right
+        _temp = self.cubies[0][2]
+        # top left to top right
+        self.cubies[0][2] = self.cubies[0][0]
+        # bottom left to top left
+        self.cubies[0][0] = self.cubies[2][0]
+        # bottom right to bottom left
+        self.cubies[2][0] = self.cubies[2][2]
+        # top right to bottom right
+        self.cubies[2][2] = _temp
+
+        return self
 
     def __eq__(self, other):
 
