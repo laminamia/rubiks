@@ -13,7 +13,8 @@ class Color(object):
         return OPPOSITES.get(self)
 
     def __repr__(self):
-        return Style.BRIGHT + Fore.BLACK + self.colorcode + self.char + Style.RESET_ALL
+        return self.char
+        # return Style.BRIGHT + Fore.BLACK + self.colorcode + self.char + Style.RESET_ALL
 
     def __eq__(self, other):
         return self.char == other.char
@@ -88,17 +89,21 @@ class Cube(object):
             self.right.cubies[i][0] = self.top.cubies[2][i]
 
             # fix top: left last column -> top last row
+            # (in reverse order - will reverse below)
+            # (if we try to reverse here, we overwrite values that still need to be assigned)
             self.top.cubies[2][i] = self.left.cubies[i][2]
 
-            # fix left: bottom first row ->
-            # bottom side first row is adjacent to front last row
-            # swap each item in bottom first row to last item of each row of left side
+            # fix left: bottom first row -> left last column
             self.left.cubies[i][2] = self.bottom.cubies[0][i]
 
-            # fix bottom
-            # right side first column is adjacent to front
-            # swap each item in right first column to first row of bottom
+            # fix bottom: right first column -> top first row
+            # (in reverse order - will reverse below)
+            # (if we try to reverse here, we overwrite values that still need to be assigned)
             self.bottom.cubies[0][i] = _right
+
+        # need to swap first and last in left last column and right first column
+        self.top.cubies[2][0], self.top.cubies[2][2] = self.top.cubies[2][2], self.top.cubies[2][0]
+        self.bottom.cubies[0][0], self.bottom.cubies[0][2] = self.bottom.cubies[0][2], self.bottom.cubies[0][0]
 
         self.front.rotate_face_colors_cw()
 
@@ -110,16 +115,24 @@ class Cube(object):
             _temp = self.right.cubies[i][0]
 
             # fix right: bottom first row -> right first column
+            # (in reverse order - will reverse below)
+            # (if we try to reverse here, we overwrite values that still need to be assigned)
             self.right.cubies[i][0] = self.bottom.cubies[0][i]
 
             # fix bottom: left last column -> bottom first row
             self.bottom.cubies[0][i] = self.left.cubies[i][2]
 
             # fix left: top last row -> left last column
+            # (in reverse order - will reverse below)
+            # (if we try to reverse here, we overwrite values that still need to be assigned)
             self.left.cubies[i][2] = self.top.cubies[2][i]
 
             # fix top: right first column -> top last row
             self.top.cubies[2][i] = _temp
+
+        # need to swap first and last in left last column and right first column
+        self.right.cubies[0][0], self.right.cubies[2][0] = self.right.cubies[2][0], self.right.cubies[0][0]
+        self.left.cubies[2][2], self.left.cubies[0][2] = self.left.cubies[0][2], self.left.cubies[2][2]
 
         self.front.rotate_face_colors_ccw()
 
