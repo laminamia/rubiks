@@ -56,6 +56,26 @@ class Cube(object):
         self.left = left
         self.right = right
 
+    def rotate_cube_back(self, num_times=1):
+        for i in range(num_times % 4):
+            _temp = self.back
+            self.back = self.top.inverse()
+            self.top = self.front
+            self.front = self.bottom
+            self.bottom = _temp.inverse()
+            self.left.rotate_face_colors_ccw()
+            self.right.rotate_face_colors_cw()
+
+    def rotate_cube_forward(self, num_times=1):
+        for i in range(num_times % 4):
+            _temp = self.front
+            self.front = self.top
+            self.top = self.back.inverse()
+            self.back = self.bottom.inverse()
+            self.bottom = _temp
+            self.left.rotate_face_colors_cw()
+            self.right.rotate_face_colors_ccw()
+
     def rotate_cube_right(self, num_times=1):
         for i in range(num_times % 4):
             _temp = self.front
@@ -160,6 +180,17 @@ class Side(object):
     @staticmethod
     def create_copy(side):
         return Side([list(side.get_row(0)), list(side.get_row(1)), list(side.get_row(2))])
+
+    def copy(self):
+        return Side.create_copy(self)
+
+    def inverse(self):
+        rows = []
+        for i in range(3):
+            r = list(self.get_row(2 - i))
+            r.reverse()
+            rows.append(r)
+        return Side(rows)
 
     def __init__(self, cubies):
 

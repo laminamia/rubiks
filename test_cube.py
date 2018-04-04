@@ -101,6 +101,30 @@ class TestCube(unittest.TestCase):
 
         self.run_test_manipulation(self.cube.rotate_cube_left, expected)
 
+    def test_rotate_cube_forward(self):
+        expected = Cube(front=self.top,
+                        bottom=self.front,
+                        back=Side([[YELLOW, BLUE, GREEN],
+                                   [RED, YELLOW, RED],
+                                   [BLUE, YELLOW, ORANGE]]),
+                        top=Side([[WHITE, ORANGE, GREEN],
+                                  [WHITE, GREEN, GREEN],
+                                  [ORANGE, YELLOW, RED]]),
+                        left=self.left.copy().rotate_face_colors_cw(),
+                        right=self.right.copy().rotate_face_colors_ccw())
+
+        self.run_test_manipulation(self.cube.rotate_cube_forward, expected)
+
+    def test_rotate_cube_back(self):
+        expected = Cube(top=self.front,
+                        front=self.bottom,
+                        back=self.top.copy().inverse(),
+                        bottom=self.back.copy().inverse(),
+                        left=self.left.copy().rotate_face_colors_ccw(),
+                        right=self.right.copy().rotate_face_colors_cw())
+
+        self.run_test_manipulation(self.cube.rotate_cube_back, expected)
+
     def run_test_manipulation(self, manipulation_fn, expected_cube):
 
         self.assertEqual(self.front, self.cube.front, "Front not as expected before manipulation")
@@ -200,6 +224,35 @@ class TestSide(unittest.TestCase):
 
         self.assertEqual(s1, Side.create_copy(s1))
         self.assertIsNot(s1, Side.create_copy(s1))
+        self.assertEqual(s1, s1.copy())
+        self.assertIsNot(s1, s1.copy())
+
+    def test_inverse(self):
+        s1 = Side([[RED, BLUE, GREEN],
+                   [YELLOW, WHITE, ORANGE],
+                   [BLUE, GREEN, YELLOW]])
+        s2 = Side([[YELLOW, GREEN, BLUE],
+                   [ORANGE, WHITE, YELLOW],
+                   [GREEN, BLUE, RED]])
+        self.assertEqual(s2, s1.inverse())
+
+    def test_rotate_face_colors_cw(self):
+        s1 = Side([[RED, BLUE, GREEN],
+                   [YELLOW, WHITE, ORANGE],
+                   [BLUE, GREEN, YELLOW]])
+        s2 = Side([[BLUE, YELLOW, RED],
+                   [GREEN, WHITE, BLUE],
+                   [YELLOW, ORANGE, GREEN]])
+        self.assertEqual(s2, s1.rotate_face_colors_cw())
+
+    def test_rotate_face_colors_ccw(self):
+        s1 = Side([[RED, BLUE, GREEN],
+                   [YELLOW, WHITE, ORANGE],
+                   [BLUE, GREEN, YELLOW]])
+        s2 = Side([[GREEN, ORANGE, YELLOW],
+                   [BLUE, WHITE, GREEN],
+                   [RED, YELLOW, BLUE]])
+        self.assertEqual(s2, s1.rotate_face_colors_ccw())
 
 
 if __name__ == '__main__':
