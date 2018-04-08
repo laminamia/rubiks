@@ -1,20 +1,26 @@
-from _ctypes import Array
-
-from colorama import Back, Style, Fore
+from colorama import *
+import regex
 
 
 class Color(object):
+    are_colors_on = False
 
-    def __init__(self, char, colorcode):
+    @staticmethod
+    def initialize(are_colors_on=False):
+        Color.are_colors_on = are_colors_on
+
+    def __init__(self, char, color_code):
         self.char = char
-        self.colorcode = colorcode
+        self.color_code = color_code
 
     def opposite(self):
         return OPPOSITES.get(self)
 
     def __repr__(self):
+        if Color.are_colors_on:
+            return Style.BRIGHT + self.color_code + self.char + Style.RESET_ALL
         return self.char
-        # return Style.BRIGHT + Fore.BLACK + self.colorcode + self.char + Style.RESET_ALL
+        # return Style.BRIGHT + Fore.WHITE + self.colorcode + self.char + Style.RESET_ALL
 
     def __eq__(self, other):
         return self.char == other.char
@@ -23,14 +29,15 @@ class Color(object):
         return self.char.__hash__()
 
 
-RED = Color("R", Back.RED)
-YELLOW = Color("Y", Back.LIGHTYELLOW_EX)
-GREEN = Color("G", Back.GREEN)
-BLUE = Color("B", Back.BLUE)
-ORANGE = Color("O", Back.LIGHTRED_EX)
-WHITE = Color("W", Back.WHITE)
+RED = Color("R", Fore.RED)
+YELLOW = Color("Y", Fore.LIGHTYELLOW_EX)
+GREEN = Color("G", Fore.GREEN)
+BLUE = Color("B", Fore.BLUE)
+ORANGE = Color("O", Fore.LIGHTRED_EX)
+WHITE = Color("W", Fore.WHITE)
 COLORS = [RED, YELLOW, GREEN, BLUE, ORANGE, WHITE]
 OPPOSITES = {RED: ORANGE, ORANGE: RED, YELLOW: WHITE, WHITE: YELLOW, BLUE: GREEN, GREEN: BLUE}
+COLORS_BY_CHAR = {color.char: color for color in COLORS}
 
 
 class Cube(object):
@@ -48,6 +55,10 @@ class Cube(object):
 
         return Cube(front, back, left, right, top, bottom)
 
+    @staticmethod
+    def from_string(s=""):
+        pass
+
     def __init__(self, front, back, left, right, top, bottom):
         self.front = front
         self.back = back
@@ -56,13 +67,13 @@ class Cube(object):
         self.left = left
         self.right = right
 
-    def rotate_cube_back(self, num_times=1):
+    def rotate_cube_backward(self, num_times=1):
         for i in range(num_times % 4):
             _temp = self.back
-            self.back = self.top.inverse()
+            self.back = self.top.create_inverse()
             self.top = self.front
             self.front = self.bottom
-            self.bottom = _temp.inverse()
+            self.bottom = _temp.create_inverse()
             self.left.rotate_face_colors_ccw()
             self.right.rotate_face_colors_cw()
 
@@ -70,8 +81,8 @@ class Cube(object):
         for i in range(num_times % 4):
             _temp = self.front
             self.front = self.top
-            self.top = self.back.inverse()
-            self.back = self.bottom.inverse()
+            self.top = self.back.create_inverse()
+            self.back = self.bottom.create_inverse()
             self.bottom = _temp
             self.left.rotate_face_colors_cw()
             self.right.rotate_face_colors_ccw()
@@ -156,14 +167,84 @@ class Cube(object):
 
         self.front.rotate_face_colors_ccw()
 
-    def __repr__(self):
+    # less efficient but can implement natively later
+    def rotate_top_left(self):
+        self.rotate_cube_forward()
+        self.rotate_front_cw()
+        self.rotate_cube_backward()
 
-        return "Front\n" + str(self.front) + \
-               "Back\n" + str(self.back) + \
-               "Left\n" + str(self.left) + \
-               "Right\n" + str(self.right) + \
-               "Top\n" + str(self.top) + \
-               "Bottom\n" + str(self.bottom)
+    # less efficient but can implement natively later
+    def rotate_top_right(self):
+        self.rotate_cube_forward()
+        self.rotate_front_ccw()
+        self.rotate_cube_backward()
+
+    # less efficient but can implement natively later
+    def rotate_bottom_left(self):
+        self.rotate_cube_backward()
+        self.rotate_front_ccw()
+        self.rotate_cube_forward()
+
+    # less efficient but can implement natively later
+    def rotate_bottom_right(self):
+        self.rotate_cube_backward()
+        self.rotate_front_cw()
+        self.rotate_cube_forward()
+
+    # less efficient but can implement natively later
+    def rotate_left_forward(self):
+        self.rotate_cube_right()
+        self.rotate_front_cw()
+        self.rotate_cube_left()
+
+    # less efficient but can implement natively later
+    def rotate_left_backward(self):
+        self.rotate_cube_right()
+        self.rotate_front_ccw()
+        self.rotate_cube_left()
+
+    # less efficient but can implement natively later
+    def rotate_right_forward(self):
+        self.rotate_cube_left()
+        self.rotate_front_ccw()
+        self.rotate_cube_right()
+
+    # less efficient but can implement natively later
+    def rotate_right_backward(self):
+        self.rotate_cube_left()
+        self.rotate_front_cw()
+        self.rotate_cube_right()
+
+    # less efficient but can implement natively later
+    def rotate_back_right(self):
+        self.rotate_cube_forward(2)
+        self.rotate_front_ccw()
+        self.rotate_cube_backward(2)
+
+    # less efficient but can implement natively later
+    def rotate_back_left(self):
+        self.rotate_cube_forward(2)
+        self.rotate_front_cw()
+        self.rotate_cube_backward(2)
+
+    # less efficient but can implement natively later
+    def rotate_right_backward(self):
+        self.rotate_cube_left()
+        self.rotate_front_cw()
+        self.rotate_cube_right()
+
+    def __repr__(self):
+        s = ""
+        for i in range(3):
+            s += "    %s%s%s\n" % tuple(self.top.get_row(i))
+        for i in range(3):
+            s += "%s%s%s " % tuple(self.left.get_row(i))
+            s += "%s%s%s " % tuple(self.front.get_row(i))
+            s += "%s%s%s " % tuple(self.right.get_row(i))
+            s += "%s%s%s\n" % tuple(self.back.get_row(i))
+        for i in range(3):
+            s += "    %s%s%s\n" % tuple(self.bottom.get_row(i))
+        return s
 
 
 class Side(object):
@@ -178,13 +259,13 @@ class Side(object):
                      [color, color, color]])
 
     @staticmethod
-    def create_copy(side):
+    def create_from_side(side):
         return Side([list(side.get_row(0)), list(side.get_row(1)), list(side.get_row(2))])
 
     def copy(self):
-        return Side.create_copy(self)
+        return Side.create_from_side(self)
 
-    def inverse(self):
+    def create_inverse(self):
         rows = []
         for i in range(3):
             r = list(self.get_row(2 - i))
@@ -282,12 +363,28 @@ class Side(object):
 
     def __eq__(self, other):
 
-        if len(self.cubies) != len(other.cubies): return False
+        if len(self.cubies) != len(other.cubies):
+            return False
 
         for c1, c2 in zip(self.cubies, other.cubies):
-            if len(c1) != len(c2): return False;
+            if len(c1) != len(c2):
+                return False;
 
             for color1, color2 in zip(c1, c2):
-                if color1 != color2: return False
+                if color1 != color2:
+                    return False
 
         return True
+
+
+class Parser(object):
+
+    def __init__(self):
+        self.expr = regex.compile("^(\s*[yrbgwo]{3}[ \t]*\n+){3}\s*" +
+                                  "((\s*[yrbgwo]{3}[ \t]*){4}\n+){3}" +
+                                  "(\s*[yrbgwo]{3}[ \t]*\n+){3}\s*$", regex.IGNORECASE)
+
+    def is_string_valid(self, cube_string):
+        cube_string += "\n"
+        match = self.expr.match(cube_string)
+        return match is not None

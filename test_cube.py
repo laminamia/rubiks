@@ -1,42 +1,171 @@
 import unittest
 from rubiks import *
 import logging
+import regex
+
+
+class TestParser(unittest.TestCase):
+
+    def test_parse_cube_from_string(self):
+        s = "    YOG\n" + \
+            "    OWW\n" + \
+            "    BBW\n" + \
+            "BGR YWR BOY RYO\n" + \
+            "RRG RBB YOW GGW\n" + \
+            "RBW GGW OYO GOW\n" + \
+            "    OYB\n" + \
+            "    RYR\n" + \
+            "    GBY"
+
+        p = Parser()
+        self.assertFalse(p.is_string_valid("YOG GOB RBW"))
+        self.assertTrue(p.is_string_valid("    YOG    \n\n" +
+                                          "   GOB  \n" +
+                                          " RBW    \n" +
+                                          "  BGR  YWR BOY   RYO\n\n" +
+                                          "RRG RBB YOW GGW\n" +
+                                          "RBW GGW OYO GOW\n" +
+                                          "    OYB\n" +
+                                          "    RYR\n" +
+                                          "    GBY"
+                                          ))
+        self.assertFalse(p.is_string_valid("    YOG    \n\n" +
+                                           "   GOB  \n" +
+                                           " RBW    \n" +
+                                           "  BGR  YWR BOY   RYO\n\n" +
+                                           "RRG RBB YOW GGW\n" +
+                                           "RBW GGW OYO GOW\n"
+                                           ))
+        self.assertTrue(p.is_string_valid("    YOG    \n\n" +
+                                          "   GOB  \n" +
+                                          " RBW    \n" +
+                                          "  BGGYWRBOYRYO\n" +
+                                          "RRG RBB YOW GGW\n" +
+                                          "RBW GGW OYO GOW\n" +
+                                          "    OYB\n" +
+                                          "    RYR\n" +
+                                          "    GBY"))
+        self.assertTrue(p.is_string_valid("    YOG    \n\n" +
+                                          "   GOB  \n" +
+                                          " RBW    \n" +
+                                          "  BGGYWRBOYRYO\n" +
+                                          "RRG RBB YOW GGW\n" +
+                                          "RBW GGW OYO GOW\n" +
+                                          "  \n\n  OYB\n" +
+                                          "  \t  RYR\n" +
+                                          "\t\n    GBY\n\n\n\n\n   \t\t\t"))
+        self.assertTrue(p.is_string_valid("    yog    \n\n" +
+                                          "   GOB  \n" +
+                                          " RBW    \n" +
+                                          "  BGGYwRBOYRYO\n" +
+                                          "RRG RBB YoW GGW\n" +
+                                          "RBW GGW OyO GOW\n" +
+                                          "  \n\n  OYB\n" +
+                                          "  \t  RYR\n" +
+                                          "\t\n    GBY\n\n\n\n\n   \t\t\t"))
+        self.assertTrue(p.is_string_valid(s))
+
+    def test_fool_around(self):
+        expr = regex.compile("^((\s*[yrbgwo]{3}[ \t]*\n+){3}\s*)" +
+                             "(((\s*[yrbgwo]{3}[ \t]*){4}\n+){3})" +
+                             "((\s*[yrbgwo]{3}[ \t]*\n+){3}\s*)$", regex.IGNORECASE)
+        s = "    yog    \n\n" + \
+            "   GOB  \n" + \
+            " RBW    \n" + \
+            "  BGGYwRBOYRYO\n" + \
+            "RRG RBB YoW GGW\n" + \
+            "RBW GGW OyO GOW\n" + \
+            "  \n\n  OYB\n" + \
+            "  \t  RYR\n" + \
+            "\t\n    GBY\n\n\n\n\n   \t\t\t"
+
+        match = expr.match(s)
+        groups = match.groups()
+        print("\n")
+        print(len(groups))
+        print(groups)
+        a, b, c, d = groups[0], groups[1], groups[2], groups[3]
+        print("First Group: " + a)
+        print("Second Group: " + b)
+        print("Third Group: " + c)
+        print("Fourth Group: " + d)
+
+        matches = regex.findall("\s*([yYrRbBgGwWoO]{3})[ \t]*\n", s)
+        print("Length: ")
+        n = len(matches)
+        print(n)
+        print("Result of findall: ")
+        print(matches)
 
 
 class TestCube(unittest.TestCase):
 
     def setUp(self):
-
-        # Make up some random sides
+        # sides for use in tests
         self.front = Side([[YELLOW, WHITE, RED],
-                      [RED, BLUE, BLUE],
-                      [GREEN, GREEN, WHITE]])
+                           [RED, BLUE, BLUE],
+                           [GREEN, GREEN, WHITE]])
         self.back = Side([[RED, YELLOW, ORANGE],
-                     [GREEN, GREEN, WHITE],
-                     [GREEN, ORANGE, WHITE]])
+                          [GREEN, GREEN, WHITE],
+                          [GREEN, ORANGE, WHITE]])
         self.left = Side([[BLUE, GREEN, RED],
-                     [RED, RED, GREEN],
-                     [RED, BLUE, WHITE]])
+                          [RED, RED, GREEN],
+                          [RED, BLUE, WHITE]])
         self.right = Side([[BLUE, ORANGE, YELLOW],
-                      [YELLOW, ORANGE, WHITE],
-                      [ORANGE, YELLOW, ORANGE]])
+                           [YELLOW, ORANGE, WHITE],
+                           [ORANGE, YELLOW, ORANGE]])
         self.top = Side([[YELLOW, ORANGE, GREEN],
-                    [ORANGE, WHITE, WHITE],
-                    [BLUE, BLUE, WHITE]])
+                         [ORANGE, WHITE, WHITE],
+                         [BLUE, BLUE, WHITE]])
         self.bottom = Side([[ORANGE, YELLOW, BLUE],
-                       [RED, YELLOW, RED],
-                       [GREEN, BLUE, YELLOW]])
+                            [RED, YELLOW, RED],
+                            [GREEN, BLUE, YELLOW]])
 
         # use copies in cube because the lists will be modified by cube manipulation
-        self.cube = Cube(front=Side.create_copy(self.front),
-                  back=Side.create_copy(self.back),
-                  left=Side.create_copy(self.left),
-                  right=Side.create_copy(self.right),
-                  top=Side.create_copy(self.top),
-                  bottom=Side.create_copy(self.bottom))
+        self.cube = Cube(front=self.front.copy(),
+                         back=self.back.copy(),
+                         left=self.left.copy(),
+                         right=self.right.copy(),
+                         top=self.top.copy(),
+                         bottom=self.bottom.copy())
 
+    def test_rotate_back_left(self):
+        expected = Cube(front=self.front.copy(),
+                        back=self.back.copy().rotate_face_colors_cw(),
+                        left=Side([[GREEN, GREEN, RED],
+                                   [ORANGE, RED, GREEN],
+                                   [YELLOW, BLUE, WHITE]]),
+                        right=Side([[BLUE, ORANGE, YELLOW],
+                                    [YELLOW, ORANGE, BLUE],
+                                    [ORANGE, YELLOW, GREEN]]),
+                        top=Side([[YELLOW, WHITE, ORANGE],
+                                  [ORANGE, WHITE, WHITE],
+                                  [BLUE, BLUE, WHITE]]),
+                        bottom=Side([[ORANGE, YELLOW, BLUE],
+                                     [RED, YELLOW, RED],
+                                     [BLUE, RED, RED]]))
 
-    def test_move_front_cw(self):
+        self.run_test_manipulation(self.cube.rotate_back_left, expected)
+
+    def test_rotate_back_right(self):
+        expected = Cube(front=self.front.copy(),
+                        back=self.back.copy().rotate_face_colors_ccw(),
+                        left=Side([[GREEN, GREEN, RED],
+                                   [BLUE, RED, GREEN],
+                                   [YELLOW, BLUE, WHITE]]),
+                        right=Side([[BLUE, ORANGE, YELLOW],
+                                    [YELLOW, ORANGE, ORANGE],
+                                    [ORANGE, YELLOW, GREEN]]),
+                        top=Side([[RED, RED, BLUE],
+                                  [ORANGE, WHITE, WHITE],
+                                  [BLUE, BLUE, WHITE]]),
+                        bottom=Side([[ORANGE, YELLOW, BLUE],
+                                     [RED, YELLOW, RED],
+                                     [ORANGE, WHITE, YELLOW]]))
+
+        self.run_test_manipulation(self.cube.rotate_back_right, expected)
+
+    def test_rotate_front_cw(self):
         expected = Cube(front=Side([[GREEN, RED, YELLOW],
                                     [GREEN, BLUE, WHITE],
                                     [WHITE, BLUE, RED]]),
@@ -58,7 +187,7 @@ class TestCube(unittest.TestCase):
 
         self.run_test_manipulation(self.cube.rotate_front_cw, expected)
 
-    def test_move_front_ccw(self):
+    def test_rotate_front_ccw(self):
         expected = Cube(front=Side([[RED, BLUE, WHITE],
                                     [WHITE, BLUE, GREEN],
                                     [YELLOW, RED, GREEN]]),
@@ -80,24 +209,172 @@ class TestCube(unittest.TestCase):
 
         self.run_test_manipulation(self.cube.rotate_front_ccw, expected)
 
+    def test_rotate_right_forward(self):
+        expected = Cube(front=Side([[YELLOW, WHITE, GREEN],
+                                    [RED, BLUE, WHITE],
+                                    [GREEN, GREEN, WHITE]]),
+                        back=Side([[YELLOW, YELLOW, ORANGE],
+                                   [RED, GREEN, WHITE],
+                                   [BLUE, ORANGE, WHITE]]),
+                        left=self.left.copy(),
+                        right=Side.create_from_side(self.right.copy().rotate_face_colors_ccw()),
+                        top=Side([[YELLOW, ORANGE, GREEN],
+                                  [ORANGE, WHITE, GREEN],
+                                  [BLUE, BLUE, RED]]),
+                        bottom=Side([[ORANGE, YELLOW, RED],
+                                     [RED, YELLOW, BLUE],
+                                     [GREEN, BLUE, WHITE]]))
+        self.run_test_manipulation(self.cube.rotate_right_forward, expected)
+
+    def test_rotate_right_backward(self):
+        expected = Cube(front=Side([[YELLOW, WHITE, BLUE],
+                                    [RED, BLUE, RED],
+                                    [GREEN, GREEN, YELLOW]]),
+                        back=Side([[WHITE, YELLOW, ORANGE],
+                                   [WHITE, GREEN, WHITE],
+                                   [GREEN, ORANGE, WHITE]]),
+                        left=self.left.copy(),
+                        right=Side.create_from_side(self.right.copy().rotate_face_colors_cw()),
+                        top=Side([[YELLOW, ORANGE, RED],
+                                  [ORANGE, WHITE, BLUE],
+                                  [BLUE, BLUE, WHITE]]),
+                        bottom=Side([[ORANGE, YELLOW, GREEN],
+                                     [RED, YELLOW, GREEN],
+                                     [GREEN, BLUE, RED]]))
+        self.run_test_manipulation(self.cube.rotate_right_backward, expected)
+
+    def test_rotate_left_forward(self):
+        expected = Cube(front=Side([[YELLOW, WHITE, RED],
+                                    [ORANGE, BLUE, BLUE],
+                                    [BLUE, GREEN, WHITE]]),
+                        back=Side([[RED, YELLOW, GREEN],
+                                   [GREEN, GREEN, RED],
+                                   [GREEN, ORANGE, ORANGE]]),
+                        left=Side([[RED, RED, BLUE],
+                                   [BLUE, RED, GREEN],
+                                   [WHITE, GREEN, RED]]),
+                        right=self.right.copy(),
+                        top=Side([[WHITE, ORANGE, GREEN],
+                                  [WHITE, WHITE, WHITE],
+                                  [ORANGE, BLUE, WHITE]]),
+                        bottom=Side([[YELLOW, YELLOW, BLUE],
+                                     [RED, YELLOW, RED],
+                                     [GREEN, BLUE, YELLOW]]))
+
+        self.run_test_manipulation(self.cube.rotate_left_forward, expected)
+
+    def test_rotate_left_backward(self):
+        expected = Cube(front=Side([[ORANGE, WHITE, RED],
+                                    [RED, BLUE, BLUE],
+                                    [GREEN, GREEN, WHITE]]),
+                        back=Side([[RED, YELLOW, BLUE],
+                                   [GREEN, GREEN, ORANGE],
+                                   [GREEN, ORANGE, YELLOW]]),
+                        left=Side.create_from_side(self.left.copy().rotate_face_colors_ccw()),
+                        right=self.right.copy(),
+                        top=Side([[YELLOW, ORANGE, GREEN],
+                                  [RED, WHITE, WHITE],
+                                  [GREEN, BLUE, WHITE]]),
+                        bottom=Side([[WHITE, YELLOW, BLUE],
+                                     [WHITE, YELLOW, RED],
+                                     [ORANGE, BLUE, YELLOW]]))
+
+        self.run_test_manipulation(self.cube.rotate_left_backward, expected)
+
+    def test_rotate_top_left(self):
+        expected = Cube(front=Side([[BLUE, ORANGE, YELLOW],
+                                    [RED, BLUE, BLUE],
+                                    [GREEN, GREEN, WHITE]]),
+                        back=Side([[BLUE, GREEN, RED],
+                                   [GREEN, GREEN, WHITE],
+                                   [GREEN, ORANGE, WHITE]]),
+                        left=Side([[YELLOW, WHITE, RED],
+                                   [RED, RED, GREEN],
+                                   [RED, BLUE, WHITE]]),
+                        right=Side([[RED, YELLOW, ORANGE],
+                                    [YELLOW, ORANGE, WHITE],
+                                    [ORANGE, YELLOW, ORANGE]]),
+                        top=Side([[BLUE, ORANGE, YELLOW],
+                                  [BLUE, WHITE, ORANGE],
+                                  [WHITE, WHITE, GREEN]]),
+                        bottom=self.bottom.copy())
+
+        self.run_test_manipulation(self.cube.rotate_top_left, expected)
+
+    def test_rotate_top_right(self):
+        expected = Cube(front=Side([[BLUE, GREEN, RED],
+                                    [RED, BLUE, BLUE],
+                                    [GREEN, GREEN, WHITE]]),
+                        back=Side([[BLUE, ORANGE, YELLOW],
+                                   [GREEN, GREEN, WHITE],
+                                   [GREEN, ORANGE, WHITE]]),
+                        left=Side([[RED, YELLOW, ORANGE],
+                                   [RED, RED, GREEN],
+                                   [RED, BLUE, WHITE]]),
+                        right=Side([[YELLOW, WHITE, RED],
+                                    [YELLOW, ORANGE, WHITE],
+                                    [ORANGE, YELLOW, ORANGE]]),
+                        top=Side([[GREEN, WHITE, WHITE],
+                                  [ORANGE, WHITE, BLUE],
+                                  [YELLOW, ORANGE, BLUE]]),
+                        bottom=self.bottom.copy())
+
+        self.run_test_manipulation(self.cube.rotate_top_right, expected)
+
+    def test_rotate_bottom_left(self):
+        expected = Cube(front=Side([[YELLOW, WHITE, RED],
+                                    [RED, BLUE, BLUE],
+                                    [ORANGE, YELLOW, ORANGE]]),
+                        back=Side([[RED, YELLOW, ORANGE],
+                                   [GREEN, GREEN, WHITE],
+                                   [RED, BLUE, WHITE]]),
+                        left=Side([[BLUE, GREEN, RED],
+                                   [RED, RED, GREEN],
+                                   [GREEN, GREEN, WHITE]]),
+                        right=Side([[BLUE, ORANGE, YELLOW],
+                                    [YELLOW, ORANGE, WHITE],
+                                    [GREEN, ORANGE, WHITE]]),
+                        top=self.top.copy(),
+                        bottom=self.bottom.copy().rotate_face_colors_ccw())
+
+        self.run_test_manipulation(self.cube.rotate_bottom_left, expected)
+
+    def test_rotate_bottom_right(self):
+        expected = Cube(front=Side([[YELLOW, WHITE, RED],
+                                    [RED, BLUE, BLUE],
+                                    [RED, BLUE, WHITE]]),
+                        back=Side([[RED, YELLOW, ORANGE],
+                                   [GREEN, GREEN, WHITE],
+                                   [ORANGE, YELLOW, ORANGE]]),
+                        left=Side([[BLUE, GREEN, RED],
+                                   [RED, RED, GREEN],
+                                   [GREEN, ORANGE, WHITE]]),
+                        right=Side([[BLUE, ORANGE, YELLOW],
+                                    [YELLOW, ORANGE, WHITE],
+                                    [GREEN, GREEN, WHITE]]),
+                        top=self.top.copy(),
+                        bottom=self.bottom.copy().rotate_face_colors_cw())
+
+        self.run_test_manipulation(self.cube.rotate_bottom_right, expected)
+
     def test_rotate_cube_right(self):
         expected = Cube(right=self.front, back=self.right, left=self.back, front=self.left,
                         top=Side([[GREEN, WHITE, WHITE],
-                               [ORANGE, WHITE, BLUE],
-                               [YELLOW, ORANGE, BLUE]]),
+                                  [ORANGE, WHITE, BLUE],
+                                  [YELLOW, ORANGE, BLUE]]),
                         bottom=Side([[GREEN, RED, ORANGE],
-                               [BLUE, YELLOW, YELLOW],
-                               [YELLOW, RED, BLUE]]))
+                                     [BLUE, YELLOW, YELLOW],
+                                     [YELLOW, RED, BLUE]]))
         self.run_test_manipulation(self.cube.rotate_cube_right, expected)
 
     def test_rotate_cube_left(self):
         expected = Cube(left=self.front, back=self.left, right=self.back, front=self.right,
                         top=Side([[BLUE, ORANGE, YELLOW],
-                               [BLUE, WHITE, ORANGE],
-                               [WHITE, WHITE, GREEN]]),
+                                  [BLUE, WHITE, ORANGE],
+                                  [WHITE, WHITE, GREEN]]),
                         bottom=Side([[BLUE, RED, YELLOW],
-                               [YELLOW, YELLOW, BLUE],
-                               [ORANGE, RED, GREEN]]))
+                                     [YELLOW, YELLOW, BLUE],
+                                     [ORANGE, RED, GREEN]]))
 
         self.run_test_manipulation(self.cube.rotate_cube_left, expected)
 
@@ -115,18 +392,27 @@ class TestCube(unittest.TestCase):
 
         self.run_test_manipulation(self.cube.rotate_cube_forward, expected)
 
+    def test_rotate_cube_forward_multi(self):
+        expected = Cube(front=self.back.create_inverse(),
+                        bottom=self.top.copy(),
+                        back=self.front.create_inverse(),
+                        top=self.bottom.copy(),
+                        left=self.left.copy().rotate_face_colors_cw().rotate_face_colors_cw(),
+                        right=self.right.copy().rotate_face_colors_ccw().rotate_face_colors_ccw())
+
+        self.run_test_manipulation(self.cube.rotate_cube_forward, expected, 2)
+
     def test_rotate_cube_back(self):
         expected = Cube(top=self.front,
                         front=self.bottom,
-                        back=self.top.copy().inverse(),
-                        bottom=self.back.copy().inverse(),
+                        back=self.top.copy().create_inverse(),
+                        bottom=self.back.copy().create_inverse(),
                         left=self.left.copy().rotate_face_colors_ccw(),
                         right=self.right.copy().rotate_face_colors_cw())
 
-        self.run_test_manipulation(self.cube.rotate_cube_back, expected)
+        self.run_test_manipulation(self.cube.rotate_cube_backward, expected)
 
-    def run_test_manipulation(self, manipulation_fn, expected_cube):
-
+    def run_test_manipulation(self, manipulation_fn, expected_cube, *args):
         self.assertEqual(self.front, self.cube.front, "Front not as expected before manipulation")
         self.assertEqual(self.back, self.cube.back, "Back not as expected before manipulation")
         self.assertEqual(self.left, self.cube.left, "Left not as expected before manipulation")
@@ -142,7 +428,7 @@ class TestCube(unittest.TestCase):
         logging.getLogger().debug("Front\n%r", self.cube.front)
         logging.getLogger().debug("Back\n%r", self.cube.back)
 
-        manipulation_fn()
+        manipulation_fn(*args)
 
         logging.getLogger().debug("Cube after manipulation\n\n")
         logging.getLogger().debug("Right\n%r", self.cube.right)
@@ -154,10 +440,10 @@ class TestCube(unittest.TestCase):
 
         self.assertEqual(expected_cube.front, self.cube.front, "Front not as expected")
         self.assertEqual(expected_cube.back, self.cube.back, "Back not as expected")
-        self.assertEqual(expected_cube.left, self.cube.left, "Left not as expected")
         self.assertEqual(expected_cube.right, self.cube.right, "Right not as expected")
         self.assertEqual(expected_cube.top, self.cube.top, "Top not as expected")
         self.assertEqual(expected_cube.bottom, self.cube.bottom, "Bottom not as expected")
+        self.assertEqual(expected_cube.left, self.cube.left, "Left not as expected")
 
 
 class TestColor(unittest.TestCase):
@@ -170,6 +456,15 @@ class TestColor(unittest.TestCase):
 
 
 class TestSide(unittest.TestCase):
+
+    def test_create_inverse(self):
+        s1 = Side([[YELLOW, WHITE, RED],
+                   [RED, BLUE, BLUE],
+                   [GREEN, GREEN, WHITE]])
+        expected = Side([[WHITE, GREEN, GREEN],
+                         [BLUE, BLUE, RED],
+                         [RED, WHITE, YELLOW]])
+        self.assertEqual(expected, s1.create_inverse())
 
     def test_get_row(self):
         rows = [[YELLOW, WHITE, RED],
@@ -222,19 +517,20 @@ class TestSide(unittest.TestCase):
                    [YELLOW, WHITE, ORANGE],
                    [BLUE, GREEN, YELLOW]])
 
-        self.assertEqual(s1, Side.create_copy(s1))
-        self.assertIsNot(s1, Side.create_copy(s1))
+        self.assertEqual(s1, Side.create_from_side(s1))
+        self.assertIsNot(s1, Side.create_from_side(s1))
         self.assertEqual(s1, s1.copy())
         self.assertIsNot(s1, s1.copy())
 
-    def test_inverse(self):
+    def test_create_inverse(self):
         s1 = Side([[RED, BLUE, GREEN],
                    [YELLOW, WHITE, ORANGE],
                    [BLUE, GREEN, YELLOW]])
         s2 = Side([[YELLOW, GREEN, BLUE],
                    [ORANGE, WHITE, YELLOW],
                    [GREEN, BLUE, RED]])
-        self.assertEqual(s2, s1.inverse())
+        self.assertEqual(s2, s1.create_inverse())
+        self.assertIsNot(s1, s1.create_inverse())
 
     def test_rotate_face_colors_cw(self):
         s1 = Side([[RED, BLUE, GREEN],
@@ -256,6 +552,9 @@ class TestSide(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    # logging.getLogger().setLevel(logging.DEBUG)
+    # logging.basicConfig()
+
     suite = unittest.TestLoader().loadTestsFromTestCase(TestCube)
     unittest.TextTestRunner(verbosity=2).run(suite)
 
@@ -263,4 +562,7 @@ if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite)
 
     suite = unittest.TestLoader().loadTestsFromTestCase(TestColor)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestParser)
     unittest.TextTestRunner(verbosity=2).run(suite)
