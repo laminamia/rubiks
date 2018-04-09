@@ -1,7 +1,6 @@
 import unittest
 from rubiks import *
 import logging
-import regex
 
 
 class TestParser(unittest.TestCase):
@@ -65,37 +64,41 @@ class TestParser(unittest.TestCase):
                                           "\t\n    GBY\n\n\n\n\n   \t\t\t"))
         self.assertTrue(p.is_string_valid(s))
 
-    def test_fool_around(self):
-        expr = regex.compile("^((\s*[yrbgwo]{3}[ \t]*\n+){3}\s*)" +
-                             "(((\s*[yrbgwo]{3}[ \t]*){4}\n+){3})" +
-                             "((\s*[yrbgwo]{3}[ \t]*\n+){3}\s*)$", regex.IGNORECASE)
-        s = "    yog    \n\n" + \
-            "   GOB  \n" + \
-            " RBW    \n" + \
-            "  BGGYwRBOYRYO\n" + \
-            "RRG RBB YoW GGW\n" + \
-            "RBW GGW OyO GOW\n" + \
-            "  \n\n  OYB\n" + \
-            "  \t  RYR\n" + \
-            "\t\n    GBY\n\n\n\n\n   \t\t\t"
+    def test_create_cube_from_string(self):
+        expected = Cube(top=Side([[YELLOW, ORANGE, GREEN],
+                                  [ORANGE, WHITE, WHITE],
+                                  [BLUE, BLUE, WHITE]]),
+                        bottom=Side([[ORANGE, YELLOW, BLUE],
+                                     [RED, YELLOW, RED],
+                                     [GREEN, BLUE, YELLOW]]),
+                        left=Side([[BLUE, GREEN, RED],
+                                   [RED, RED, GREEN],
+                                   [RED, BLUE, WHITE]]),
+                        front=Side([[YELLOW, WHITE, RED],
+                                    [RED, BLUE, BLUE],
+                                    [GREEN, GREEN, WHITE]]),
+                        right=Side([[BLUE, ORANGE, YELLOW],
+                                    [YELLOW, ORANGE, WHITE],
+                                    [ORANGE, YELLOW, ORANGE]]),
+                        back=Side([[RED, YELLOW, ORANGE],
+                                   [GREEN, GREEN, WHITE],
+                                   [GREEN, ORANGE, WHITE]]))
+        s = "    YOG\n" + \
+            "    OWW\n" + \
+            "    BBW\n" + \
+            "BGR YWR BOY RYO\n" + \
+            "RRG RBB YOW GGW\n" + \
+            "RBW GGW OYO GOW\n" + \
+            "    OYB\n" + \
+            "    RYR\n" + \
+            "    GBY"
 
-        match = expr.match(s)
-        groups = match.groups()
-        print("\n")
-        print(len(groups))
-        print(groups)
-        a, b, c, d = groups[0], groups[1], groups[2], groups[3]
-        print("First Group: " + a)
-        print("Second Group: " + b)
-        print("Third Group: " + c)
-        print("Fourth Group: " + d)
+        cube = Parser().parse_string_to_cube(s)
 
-        matches = regex.findall("\s*([yYrRbBgGwWoO]{3})[ \t]*\n", s)
-        print("Length: ")
-        n = len(matches)
-        print(n)
-        print("Result of findall: ")
-        print(matches)
+        print("\nExpected:\n" + str(expected))
+        print("\nGot:\n" + str(cube))
+
+        self.assertEqual(expected, cube)
 
 
 class TestCube(unittest.TestCase):

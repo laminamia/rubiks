@@ -1,3 +1,5 @@
+from unittest.test.test_result import __init__
+
 from colorama import *
 import regex
 
@@ -233,6 +235,16 @@ class Cube(object):
         self.rotate_front_cw()
         self.rotate_cube_right()
 
+    # todo: test
+    def __eq__(self, other):
+        return self.top == other.top and \
+               self.bottom == other.bottom and \
+               self.left == other.left and \
+               self.right == other.right and \
+               self.front == other.front and \
+               self.back == other.back
+
+
     def __repr__(self):
         s = ""
         for i in range(3):
@@ -274,7 +286,6 @@ class Side(object):
         return Side(rows)
 
     def __init__(self, cubies):
-
         # todo get rid of these assertions
         isinstance(cubies, list)
 
@@ -293,15 +304,12 @@ class Side(object):
         return output
 
     def center_color(self):
-
         return self.cubies[1][1]
 
     def get_row(self, row_idx):
-
         return self.cubies[row_idx]
 
     def get_column(self, col_idx):
-
         column = []
         for i in range(3):
             column.append(self.cubies[i][col_idx])
@@ -380,11 +388,46 @@ class Side(object):
 class Parser(object):
 
     def __init__(self):
-        self.expr = regex.compile("^(\s*[yrbgwo]{3}[ \t]*\n+){3}\s*" +
-                                  "((\s*[yrbgwo]{3}[ \t]*){4}\n+){3}" +
-                                  "(\s*[yrbgwo]{3}[ \t]*\n+){3}\s*$", regex.IGNORECASE)
+        self.__test_expr = regex.compile("^(\s*[yrbgwo]{3}[ \t]*\n+){3}\s*" +
+                                         "((\s*[yrbgwo]{3}[ \t]*){4}\n+){3}" +
+                                         "(\s*[yrbgwo]{3}[ \t]*\n+){3}\s*$", regex.IGNORECASE)
 
     def is_string_valid(self, cube_string):
         cube_string += "\n"
-        match = self.expr.match(cube_string)
-        return match is not None
+        return self.__test_expr.match(cube_string) is not None
+
+    def parse_string_to_side(self, lines):
+        return Side([[COLORS_BY_CHAR.get(c) for c in l] for l in lines])
+
+    def parse_string_to_cube(self, cube_string):
+        assert self.is_string_valid(cube_string)
+        cube_string = cube_string.replace(" ", "").replace("\t", "").upper()
+
+        # lines for top and bottom
+        tb = regex.findall(pattern="^([yrbgwo]{3})$",
+                           string=cube_string,
+                           flags=regex.IGNORECASE | regex.MULTILINE)
+
+        top = self.parse_string_to_side(tb[0:3])
+        bottom = self.parse_string_to_side(tb[3:])
+
+        # lines for left, front, right, back
+        lfrb = regex.findall(pattern="^([yrbgwo]{12})$",
+                             string=cube_string,
+                             flags=regex.IGNORECASE | regex.MULTILINE)
+        left_lines = []
+        front_lines = []
+        right_lines = []
+        back_lines = []
+        for l in lfrb:
+            left_lines.append([c for c in l[0:3]])
+            front_lines.append([c for c in l[3:6]])
+            right_lines.append([c for c in l[6:9]])
+            back_lines.append([c for c in l[9:12]])
+
+        left = self.parse_string_to_side(left_lines)
+        front = self.parse_string_to_side(front_lines)
+        right = self.parse_string_to_side(right_lines)
+        back = self.parse_string_to_side(back_lines)
+
+        return Cube(top=top, front=front, back=back, left=left, right=right, bottom=bottom)
