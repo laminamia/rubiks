@@ -1,5 +1,4 @@
-from unittest.test.test_result import __init__
-
+import itertools
 from colorama import *
 import regex
 
@@ -61,6 +60,14 @@ class Cube(object):
     def from_string(s=""):
         pass
 
+    def copy(self):
+        return Cube(front=self.front.copy(),
+                    back=self.back.copy(),
+                    left=self.left.copy(),
+                    right=self.right.copy(),
+                    top=self.top.copy(),
+                    bottom=self.bottom.copy())
+
     def __init__(self, front, back, left, right, top, bottom):
         self.front = front
         self.back = back
@@ -78,6 +85,7 @@ class Cube(object):
             self.bottom = _temp.create_inverse()
             self.left.rotate_face_colors_ccw()
             self.right.rotate_face_colors_cw()
+        return self
 
     def rotate_cube_forward(self, num_times=1):
         for i in range(num_times % 4):
@@ -88,6 +96,7 @@ class Cube(object):
             self.bottom = _temp
             self.left.rotate_face_colors_cw()
             self.right.rotate_face_colors_ccw()
+        return self
 
     def rotate_cube_right(self, num_times=1):
         for i in range(num_times % 4):
@@ -98,19 +107,13 @@ class Cube(object):
             self.right = _temp
             self.top.rotate_face_colors_ccw()
             self.bottom.rotate_face_colors_cw()
+        return self
 
     def rotate_cube_left(self, num_times=1):
         n = num_times % 4
-        if n == 0:
-            return
-        elif n == 1:
-            self.rotate_cube_right(3)
-        elif n == 2:
-            self.rotate_cube_right(2)
-        elif n == 3:
-            self.rotate_cube_right(1)
-        else:
-            return
+        if n == 0: return
+        self.rotate_cube_right(4 - n)
+        return self
 
     def rotate_front_cw(self):
         # rotate pieces that change on other faces
@@ -139,6 +142,8 @@ class Cube(object):
         self.bottom.cubies[0][0], self.bottom.cubies[0][2] = self.bottom.cubies[0][2], self.bottom.cubies[0][0]
 
         self.front.rotate_face_colors_cw()
+
+        return self
 
     def rotate_front_ccw(self):
 
@@ -169,71 +174,84 @@ class Cube(object):
 
         self.front.rotate_face_colors_ccw()
 
+        return self
+
     # less efficient but can implement natively later
     def rotate_top_left(self):
         self.rotate_cube_forward()
         self.rotate_front_cw()
         self.rotate_cube_backward()
+        return self
 
     # less efficient but can implement natively later
     def rotate_top_right(self):
         self.rotate_cube_forward()
         self.rotate_front_ccw()
         self.rotate_cube_backward()
+        return self
 
     # less efficient but can implement natively later
     def rotate_bottom_left(self):
         self.rotate_cube_backward()
         self.rotate_front_ccw()
         self.rotate_cube_forward()
+        return self
 
     # less efficient but can implement natively later
     def rotate_bottom_right(self):
         self.rotate_cube_backward()
         self.rotate_front_cw()
         self.rotate_cube_forward()
+        return self
 
     # less efficient but can implement natively later
     def rotate_left_forward(self):
         self.rotate_cube_right()
         self.rotate_front_cw()
         self.rotate_cube_left()
+        return self
 
     # less efficient but can implement natively later
     def rotate_left_backward(self):
         self.rotate_cube_right()
         self.rotate_front_ccw()
         self.rotate_cube_left()
+        return self
 
     # less efficient but can implement natively later
     def rotate_right_forward(self):
         self.rotate_cube_left()
         self.rotate_front_ccw()
         self.rotate_cube_right()
+        return self
 
     # less efficient but can implement natively later
     def rotate_right_backward(self):
         self.rotate_cube_left()
         self.rotate_front_cw()
         self.rotate_cube_right()
+        return self
 
     # less efficient but can implement natively later
     def rotate_back_right(self):
         self.rotate_cube_forward(2)
         self.rotate_front_ccw()
         self.rotate_cube_backward(2)
+        return self
 
     # less efficient but can implement natively later
     def rotate_back_left(self):
         self.rotate_cube_forward(2)
         self.rotate_front_cw()
         self.rotate_cube_backward(2)
+        return self
 
     # less efficient but can implement natively later
     def rotate_right_backward(self):
         self.rotate_cube_left()
         self.rotate_front_cw()
         self.rotate_cube_right()
+        return self
 
     # todo: test
     def __eq__(self, other):
@@ -243,7 +261,6 @@ class Cube(object):
                self.right == other.right and \
                self.front == other.front and \
                self.back == other.back
-
 
     def __repr__(self):
         s = ""
@@ -295,13 +312,16 @@ class Side(object):
         self.cubies = cubies
 
     def __repr__(self):
-        output = ""
-        for r in self.cubies:
-            for color in r:
-                output += str(color) + " "
-            output += "\n"
-
-        return output
+        # todo: see if string comprehension / generator could streamline this
+        #output = ""
+        #for r in self.cubies:
+        #    for color in r:
+        #        output += str(color) + " "
+        #    output += "\n"
+        #
+        #return output
+        return '\n'.join([''.join([str(color) for color in row])
+                          for row in self.cubies])
 
     def center_color(self):
         return self.cubies[1][1]
@@ -314,6 +334,12 @@ class Side(object):
         for i in range(3):
             column.append(self.cubies[i][col_idx])
         return column
+
+    def is_side_unicolor(self):
+        return all(c == self.cubies[0][0] for c in itertools.chain(*self.cubies))
+
+    def get_center_color(self):
+        return self.cubies[1][1];
 
     def rotate_face_colors_ccw(self):
         # rotate turned face pieces - middles

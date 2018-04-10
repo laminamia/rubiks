@@ -1,21 +1,61 @@
 import unittest
 from rubiks import *
+from solver import *
 import logging
+
+
+class TestSolver(unittest.TestCase):
+
+    def setUp(self):
+        self.solved_cube = Cube.create_solved_cube()
+
+    def test_is_solved(self):
+        solver = Solver(self.solved_cube)
+
+        # rotations of a solved cube should not change its state
+        self.assertTrue(solver.is_solved())
+        self.solved_cube.rotate_cube_right()
+        self.assertTrue(solver.is_solved())
+        self.solved_cube.rotate_cube_left()
+        self.assertTrue(solver.is_solved())
+        self.solved_cube.rotate_cube_forward()
+        self.assertTrue(solver.is_solved())
+        self.solved_cube.rotate_cube_backward()
+        self.assertTrue(solver.is_solved())
+
+        cube = self.solved_cube
+        cube.rotate_top_right()
+        cube.rotate_right_backward()
+        cube.rotate_bottom_left()
+        cube.rotate_right_backward()
+        cube.rotate_left_backward()
+        cube.rotate_front_cw()
+
+        self.assertFalse(Solver(cube).is_solved())
+
+    def test_determine_state_solved(self):
+        solver = Solver(self.solved_cube)
+        self.assertEqual(Solver.STATE_SOLVED,
+                         solver.determine_state())
+
+    def test_determine_state_0(self):
+        cube = Parser().parse_string_to_cube("OOG\n" +
+                                             "BWG\n" +
+                                             "GYY\n" +
+                                             "GRR WGR GWW OYY\n" +
+                                             "ROO GGB WRO WBW\n" +
+                                             "YYB ORW OGW BBB\n" +
+                                             "YYB\n" +
+                                             "BYR\n" +
+                                             "ROR")
+        solver = Solver(cube)
+        self.assertEqual(Solver.STATE_0,
+                         solver.determine_state())
 
 
 class TestParser(unittest.TestCase):
 
-    def test_parse_cube_from_string(self):
-        s = "    YOG\n" + \
-            "    OWW\n" + \
-            "    BBW\n" + \
-            "BGR YWR BOY RYO\n" + \
-            "RRG RBB YOW GGW\n" + \
-            "RBW GGW OYO GOW\n" + \
-            "    OYB\n" + \
-            "    RYR\n" + \
-            "    GBY"
-
+    def test_is_string_valid(self):
         p = Parser()
         self.assertFalse(p.is_string_valid("YOG GOB RBW"))
         self.assertTrue(p.is_string_valid("    YOG    \n\n" +
@@ -62,7 +102,15 @@ class TestParser(unittest.TestCase):
                                           "  \n\n  OYB\n" +
                                           "  \t  RYR\n" +
                                           "\t\n    GBY\n\n\n\n\n   \t\t\t"))
-        self.assertTrue(p.is_string_valid(s))
+        self.assertTrue(p.is_string_valid("    YOG\n" + \
+                                          "    OWW\n" + \
+                                          "    BBW\n" + \
+                                          "BGR YWR BOY RYO\n" + \
+                                          "RRG RBB YOW GGW\n" + \
+                                          "RBW GGW OYO GOW\n" + \
+                                          "    OYB\n" + \
+                                          "    RYR\n" + \
+                                          "    GBY"))
 
     def test_create_cube_from_string(self):
         expected = Cube(top=Side([[YELLOW, ORANGE, GREEN],
@@ -83,20 +131,16 @@ class TestParser(unittest.TestCase):
                         back=Side([[RED, YELLOW, ORANGE],
                                    [GREEN, GREEN, WHITE],
                                    [GREEN, ORANGE, WHITE]]))
-        s = "    YOG\n" + \
-            "    OWW\n" + \
-            "    BBW\n" + \
-            "BGR YWR BOY RYO\n" + \
-            "RRG RBB YOW GGW\n" + \
-            "RBW GGW OYO GOW\n" + \
-            "    OYB\n" + \
-            "    RYR\n" + \
-            "    GBY"
 
-        cube = Parser().parse_string_to_cube(s)
-
-        print("\nExpected:\n" + str(expected))
-        print("\nGot:\n" + str(cube))
+        cube = Parser().parse_string_to_cube("    YOG\n" +
+                                             "    OWW\n" +
+                                             "    BBW\n" +
+                                             "BGR YWR BOY RYO\n" +
+                                             "RRG RBB YOW GGW\n" +
+                                             "RBW GGW OYO GOW\n" +
+                                             "    OYB\n" +
+                                             "    RYR\n" +
+                                             "    GBY")
 
         self.assertEqual(expected, cube)
 
@@ -415,6 +459,13 @@ class TestCube(unittest.TestCase):
 
         self.run_test_manipulation(self.cube.rotate_cube_backward, expected)
 
+    def test_eq(self):
+        cube1 = self.cube.copy()
+        self.assertEqual(self.cube, cube1)
+        cube1.rotate_front_cw()
+        cube1.rotate_left_forward()
+        self.assertNotEqual(self.cube, cube1)
+
     def run_test_manipulation(self, manipulation_fn, expected_cube, *args):
         self.assertEqual(self.front, self.cube.front, "Front not as expected before manipulation")
         self.assertEqual(self.back, self.cube.back, "Back not as expected before manipulation")
@@ -553,10 +604,29 @@ class TestSide(unittest.TestCase):
                    [RED, YELLOW, BLUE]])
         self.assertEqual(s2, s1.rotate_face_colors_ccw())
 
+    def test_get_center_color(self):
+        s1 = Side([[RED, BLUE, GREEN],
+                   [YELLOW, WHITE, ORANGE],
+                   [BLUE, GREEN, YELLOW]])
+        s2 = Side([[GREEN, ORANGE, YELLOW],
+                   [BLUE, BLUE, GREEN],
+                   [RED, YELLOW, BLUE]])
+        self.assertEqual(WHITE, s1.get_center_color())
+        self.assertEqual(BLUE, s2.get_center_color())
+
+    def test_is_side_unicolor(self):
+        side = Side([[RED, RED, RED],
+                   [RED, RED, RED],
+                   [RED, RED, RED]])
+        self.assertTrue(side.is_side_unicolor())
+
 
 if __name__ == '__main__':
     # logging.getLogger().setLevel(logging.DEBUG)
     # logging.basicConfig()
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestSolver)
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
     suite = unittest.TestLoader().loadTestsFromTestCase(TestCube)
     unittest.TextTestRunner(verbosity=2).run(suite)
