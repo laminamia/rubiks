@@ -43,6 +43,14 @@ COLORS_BY_CHAR = {color.char: color for color in COLORS}
 
 class Cube(object):
 
+    FRONT = "front"
+    BACK = "back"
+    TOP = "top"
+    LEFT = "left"
+    RIGHT = "right"
+    BOTTOM = "bottom"
+    SIDE_NAMES = [FRONT, BACK, LEFT, RIGHT, BOTTOM, TOP]
+
     @staticmethod
     def create_solved_cube():
         front = Side.create_unicolor_side(BLUE)
@@ -75,6 +83,11 @@ class Cube(object):
         self.bottom = bottom
         self.left = left
         self.right = right
+
+    def get_side_name(self, side):
+        side_to_name = {self.front: Cube.FRONT, self.back: Cube.BACK, self.top: Cube.TOP,
+                self.bottom: Cube.BOTTOM, self.left: Cube.LEFT, self.right: Cube.RIGHT}
+        return side_to_name[side]
 
     def rotate_cube_backward(self, num_times=1):
         for i in range(num_times % 4):
@@ -312,14 +325,6 @@ class Side(object):
         self.cubies = cubies
 
     def __repr__(self):
-        # todo: see if string comprehension / generator could streamline this
-        #output = ""
-        #for r in self.cubies:
-        #    for color in r:
-        #        output += str(color) + " "
-        #    output += "\n"
-        #
-        #return output
         return '\n'.join([''.join([str(color) for color in row])
                           for row in self.cubies])
 
@@ -409,6 +414,11 @@ class Side(object):
                     return False
 
         return True
+
+    def __hash__(self):
+        s = self.__repr__()
+        s.replace("\n", "")
+        return hash(s)
 
 
 class Parser(object):
