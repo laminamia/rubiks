@@ -19,7 +19,7 @@ class TestSolver(unittest.TestCase):
         self.assertTrue(solver.is_solved())
         self.solved_cube.rotate_cube_left()
         self.assertTrue(solver.is_solved())
-        self.solved_cube.rotate_cube_forward()
+        self.solved_cube.rotate_cube_forward(2)
         self.assertTrue(solver.is_solved())
         self.solved_cube.rotate_cube_backward()
         self.assertTrue(solver.is_solved())
@@ -33,6 +33,20 @@ class TestSolver(unittest.TestCase):
         cube.rotate_front_cw()
 
         self.assertFalse(Solver(cube).is_solved())
+
+    def test_solve_stage_1(self):
+        cube = Parser().parse_string_to_cube("    ORG\n" +
+                                             "    OWY\n" +
+                                             "    YGG\n" +
+                                             "GWB RWR WOY RYY\n" +
+                                             "OGR GRW RBY GOG\n" +
+                                             "WBY BBW BBO BBO\n" +
+                                             "    RWR\n" +
+                                             "    GRW\n" +
+                                             "    BBW")
+        solver = Solver(cube)
+        self.assertEqual(Solver.STAGE_0, solver.determine_stage())
+
 
     def test_determine_state_solved(self):
         solver = Solver(self.solved_cube)
@@ -85,6 +99,51 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(Solver.STAGE_1,
                          solver.determine_stage())
 
+    def test_determine_right_stage_1(self):
+        cube = Parser().parse_string_to_cube("    GOR\n" +
+                                             "    BGG\n" +
+                                             "    OGY\n" +
+                                             "OOB YWB RYB WGW\n" +
+                                             "RRR WWW OOR YYB\n" +
+                                             "RRG YWG RYB WYW\n" +
+                                             "    OBY\n" +
+                                             "    GBB\n" +
+                                             "    GOO")
+        cube.rotate_cube_right()
+        solver = Solver(cube)
+        self.assertEqual(Solver.STAGE_1,
+                         solver.determine_stage())
+
+    def test_determine_bottom_stage_1(self):
+        cube = Parser().parse_string_to_cube("    GOR\n" +
+                                             "    BGG\n" +
+                                             "    OGY\n" +
+                                             "OOB YWB RYB WGW\n" +
+                                             "RRR WWW OOR YYB\n" +
+                                             "RRG YWG RYB WYW\n" +
+                                             "    OBY\n" +
+                                             "    GBB\n" +
+                                             "    GOO")
+        cube.rotate_cube_forward()
+        solver = Solver(cube)
+        self.assertEqual(Solver.STAGE_1,
+                         solver.determine_stage())
+
+    def test_determine_back_stage_1(self):
+        cube = Parser().parse_string_to_cube("    GOR\n" +
+                                             "    BGG\n" +
+                                             "    OGY\n" +
+                                             "OOB YWB RYB WGW\n" +
+                                             "RRR WWW OOR YYB\n" +
+                                             "RRG YWG RYB WYW\n" +
+                                             "    OBY\n" +
+                                             "    GBB\n" +
+                                             "    GOO")
+        cube.rotate_cube_forward(2)
+        solver = Solver(cube)
+        self.assertEqual(Solver.STAGE_1,
+                         solver.determine_stage())
+
     def test_determine_left_stage_1(self):
         # testing left at stage_1
         cube = Parser().parse_string_to_cube("    OBG\n" +
@@ -101,6 +160,7 @@ class TestSolver(unittest.TestCase):
                          solver.determine_stage())
         self.assertEqual(1, len(solver.stage_1_candidates))
         self.assertEqual(Cube.LEFT, solver.stage_1_candidates[0])
+
 
 class TestParser(unittest.TestCase):
 
@@ -151,14 +211,14 @@ class TestParser(unittest.TestCase):
                                           "  \n\n  OYB\n" +
                                           "  \t  RYR\n" +
                                           "\t\n    GBY\n\n\n\n\n   \t\t\t"))
-        self.assertTrue(p.is_string_valid("    YOG\n" + \
-                                          "    OWW\n" + \
-                                          "    BBW\n" + \
-                                          "BGR YWR BOY RYO\n" + \
-                                          "RRG RBB YOW GGW\n" + \
-                                          "RBW GGW OYO GOW\n" + \
-                                          "    OYB\n" + \
-                                          "    RYR\n" + \
+        self.assertTrue(p.is_string_valid("    YOG\n" +
+                                          "    OWW\n" +
+                                          "    BBW\n" +
+                                          "BGR YWR BOY RYO\n" +
+                                          "RRG RBB YOW GGW\n" +
+                                          "RBW GGW OYO GOW\n" +
+                                          "    OYB\n" +
+                                          "    RYR\n" +
                                           "    GBY"))
 
     def test_create_cube_from_string(self):

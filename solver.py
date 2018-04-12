@@ -7,11 +7,14 @@ import itertools
 # self.cube is copied with the intent that no manipulation will
 # occur to the cube after Solver takes control of it
 class Solver(object):
+    STAGE_UNKNOWN = -1
     STAGE_0 = 0
     STAGE_1 = 1
     STAGE_SOLVED = 100
-    STAGES = [STAGE_0, STAGE_1, STAGE_SOLVED]
+    STAGES = [STAGE_UNKNOWN, STAGE_0, STAGE_1, STAGE_SOLVED]
 
+    # Create Solver with copy of cube; once a cube is passed to Solver,
+    # it is not intended to be modified by externally
     def __init__(self, cube):
         self.cube = cube.copy()
         self.current_stage = Solver.STAGE_0
@@ -24,8 +27,8 @@ class Solver(object):
             Cube.LEFT: [[self.cube.rotate_cube_right, self.cube.rotate_cube_backward],
                         [self.cube.rotate_cube_forward, self.cube.rotate_cube_left]],
             Cube.RIGHT: [[self.cube.rotate_cube_left, self.cube.rotate_cube_backward],
-                         [self.cube.rotate_cube_forward, self.cube.rotate_cube_right]]
-        }
+                         [self.cube.rotate_cube_forward, self.cube.rotate_cube_right]]}
+        self.stage = self.__determine_stage()
 
     def is_solved(self):
         for side in self.__get_sides():
@@ -51,10 +54,14 @@ class Solver(object):
                 "bottom": (self.cube.bottom, (self.cube.front, self.cube.right, self.cube.back, self.cube.left))}
 
     def determine_stage(self):
+        self.stage = self.__determine_stage()
+        return self.stage
+
+    def __determine_stage(self):
         if self.is_solved(): return Solver.STAGE_SOLVED
         if self.__is_stage_1(): return Solver.STAGE_1
         if not self.__is_stage_1(): return Solver.STAGE_0
-        pass
+        return Solver.STAGE_UNKNOWN
 
     def __is_stage_0(self):
         pass
