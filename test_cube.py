@@ -2,6 +2,7 @@ import unittest
 from rubiks import *
 from solver import *
 import logging
+import sys
 
 
 class TestSolver(unittest.TestCase):
@@ -52,7 +53,7 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(Solver.STAGE_0,
                          solver.determine_stage())
 
-    def test_determine_front_state_1(self):
+    def test_determine_top_state_1(self):
         # testing top at stage_1
         cube = Parser().parse_string_to_cube("    YWB\n" +
                                              "    WWW\n" +
@@ -66,8 +67,10 @@ class TestSolver(unittest.TestCase):
         solver = Solver(cube)
         self.assertEqual(Solver.STAGE_1,
                          solver.determine_stage())
+        self.assertEqual(1, len(solver.stage_1_candidates))
+        self.assertEqual(Cube.TOP, solver.stage_1_candidates[0])
 
-    def test_determine_front_state_1(self):
+    def test_determine_front_stage_1(self):
         # testing front at stage_1
         cube = Parser().parse_string_to_cube("    GOR\n" +
                                              "    BGG\n" +
@@ -82,7 +85,7 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(Solver.STAGE_1,
                          solver.determine_stage())
 
-    def test_determine_left_state_1(self):
+    def test_determine_left_stage_1(self):
         # testing left at stage_1
         cube = Parser().parse_string_to_cube("    OBG\n" +
                                              "    GGO\n" +
@@ -96,6 +99,8 @@ class TestSolver(unittest.TestCase):
         solver = Solver(cube)
         self.assertEqual(Solver.STAGE_1,
                          solver.determine_stage())
+        self.assertEqual(1, len(solver.stage_1_candidates))
+        self.assertEqual(Cube.LEFT, solver.stage_1_candidates[0])
 
 
 
@@ -279,6 +284,48 @@ class TestCube(unittest.TestCase):
                                      [GREEN, BLUE, YELLOW]]))
 
         self.run_test_manipulation(self.cube.rotate_front_cw, expected)
+
+        # Running another version
+        cube = Parser().parse_string_to_cube("    OBG\n" +
+                                             "    GGO\n" +
+                                             "    YGR\n" +
+                                             "YWB RYB WGW OOB\n" +
+                                             "WWW OOR YYB RRR\n" +
+                                             "YWG RYB WYW RRG\n" +
+                                             "    YBO\n" +
+                                             "    BBO\n" +
+                                             "    OGG")
+
+        expected = Parser().parse_string_to_cube("    YWY\n" +
+                                                 "    WWW\n" +
+                                                 "    GWB\n" +
+                                                 "OBY ROR YGO BRG\n" +
+                                                 "GBB YOY GGB ORR\n" +
+                                                 "GOO BRB ROG ORR\n" +
+                                                 "    WYW\n" +
+                                                 "    YYG\n" +
+                                                 "    WBW")
+        sys.stdout.flush()
+        print("\nCube Before Manipulation:\n\n")
+        print(cube)
+        sys.stdout.flush()
+        print("\nExpected Before Cube Manipulation:\n\n")
+        print(expected)
+        print("\n\n\n")
+        sys.stdout.flush()
+
+        cube.rotate_front_cw()
+
+        sys.stdout.flush()
+        print("\nCube After Manipulation:\n\n")
+        print(cube)
+        sys.stdout.flush()
+        print("\nExpected After Cube Manipulation:\n\n")
+        print(expected)
+        print("\n\n\n")
+        sys.stdout.flush()
+
+        self.assertEqual(cube, expected)
 
     def test_rotate_front_ccw(self):
         expected = Cube(front=Side([[RED, BLUE, WHITE],

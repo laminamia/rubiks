@@ -15,6 +15,15 @@ class Solver(object):
     def __init__(self, cube):
         self.cube = cube.copy()
         self.current_stage = Solver.STAGE_0
+        self.methods_to_move_any_face_to_top_list = {
+            Cube.TOP: [[], []],
+            Cube.BOTTOM: [[self.cube.rotate_cube_forward, self.cube.rotate_cube_forward],
+                          [self.cube.rotate_cube_forward, self.cube.rotate_cube_forward]],
+            Cube.FRONT: [[self.cube.rotate_cube_backward], [self.cube.rotate_cube_forward]],
+            Cube.BACK: [[self.cube.rotate_cube_forward], [self.cube.rotate_cube_backward]],
+            Cube.LEFT: [[self.cube.rotate_front_cw], [self.cube.rotate_front_ccw]],
+            Cube.RIGHT: [[self.cube.rotate_front_ccw], [self.cube.rotate_front_cw]]
+        }
 
     def is_solved(self):
         for side in self.__get_sides():
@@ -49,10 +58,15 @@ class Solver(object):
         pass
 
     def __is_stage_1(self):
+        # reset any stage_1 candidates
+        self.stage_1_candidates = []
+
         # identify any faces that are candidates for having state_1 complete
         sides = self.__get_sides_mapped_by_name()
         candidates = []
         for side in sides.values():
+            side_name = self.cube.get_side_name(side)
+            logging.getLogger().debug("Checking %s to see if it has stage_1_part_1 solved", side_name)
             center_color = side.cubies[1][1]
             top_piece = side.cubies[0][1]
             right_piece = side.cubies[1][2]
@@ -62,39 +76,31 @@ class Solver(object):
                         [top_piece, right_piece, bottom_piece, left_piece])
             if match:
                 candidates.append(side)
+                logging.getLogger().debug("Side %s stage_1_part_1 solved", side_name)
+            else:
+                logging.getLogger().debug("Side %s stage_1_part_1 NOT solved", side_name)
 
         if len(candidates) == 0: return False
-
-        methods = {
-            Cube.TOP: self.__check_top_for_stage_1_part_2,
-            #  Cube.BOTTOM: __check_bottom_for_stage_1_part_2,
-            Cube.FRONT: self.__check_front_for_stage_1_part_2,
-            #  Cube.BACK: __check_back_for_stage_1_part_2,
-            Cube.LEFT: self.__check_left_for_stage_1_part_2,
-            #  Cube.RIGHT: __check_right_for_stage_1_part_2
-        }
 
         # todo: consider flagging as part of the state of the solver the "top" that is the stage_1 solve
         for candidate_side in candidates:
             side_name = self.cube.get_side_name(candidate_side)
-            method = methods[side_name]
-            logging.getLogger().debug("Checking %s, which has cross, to see if stage_1_part_2 is solved")
-            if method(): return True;
+            method_list = self.methods_to_move_any_face_to_top_list[side_name]
 
-        return False
+            logging.getLogger().debug("Checking %s to see if it has stage_1_part_2 solved", side_name)
 
-    def __check_top_for_stage_1_part_2(self):
-        return all(side.cubies[1][1] == side.cubies[0][1] for side in
-                   [self.cube.back, self.cube.left, self.cube.front, self.cube.right])
+            moved = False
+            for method_name in method_list[0]:
+                if method_name is not None:
+                    method_name()
+                moved = True
+            found = all(side.cubies[1][1] == side.cubies[0][1] for side in
+                        [self.cube.back, self.cube.left, self.cube.front, self.cube.right])
+            logging.getLogger().debug("Side %s stage_1_part_2 %s", side_name, "solved" if found else "unsolved")
+            if moved:
+                for method_name in method_list[1]:
+                    method_name()
+            if found: self.stage_1_candidates.append(side_name)
 
-    def __check_front_for_stage_1_part_2(self):
-        return all(side.cubies[1][1] == side.cubies[coordinate_tuple[0]][coordinate_tuple[1]]
-                   for (side, coordinate_tuple) in
-                   [(self.cube.top, (2, 1)), (self.cube.bottom, (0, 1)),
-                    (self.cube.left, (1, 2)), (self.cube.right, (1, 0))])
+        return len(self.stage_1_candidates) > 0
 
-    def __check_left_for_stage_1_part_2(self):
-        return all(side.cubies[1][1] == side.cubies[coordinate_tuple[0]][coordinate_tuple[1]]
-                   for (side, coordinate_tuple) in
-                   [(self.cube.back, (2, 1)), (self.cube.front, (0, 1)),
-                    (self.cube.top, (1, 2)), (self.cube.bottom, (1, 0))])
