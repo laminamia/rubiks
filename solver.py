@@ -21,8 +21,10 @@ class Solver(object):
                           [self.cube.rotate_cube_forward, self.cube.rotate_cube_forward]],
             Cube.FRONT: [[self.cube.rotate_cube_backward], [self.cube.rotate_cube_forward]],
             Cube.BACK: [[self.cube.rotate_cube_forward], [self.cube.rotate_cube_backward]],
-            Cube.LEFT: [[self.cube.rotate_front_cw], [self.cube.rotate_front_ccw]],
-            Cube.RIGHT: [[self.cube.rotate_front_ccw], [self.cube.rotate_front_cw]]
+            Cube.LEFT: [[self.cube.rotate_cube_right, self.cube.rotate_cube_backward],
+                        [self.cube.rotate_cube_forward, self.cube.rotate_cube_left]],
+            Cube.RIGHT: [[self.cube.rotate_cube_left, self.cube.rotate_cube_backward],
+                         [self.cube.rotate_cube_forward, self.cube.rotate_cube_right]]
         }
 
     def is_solved(self):

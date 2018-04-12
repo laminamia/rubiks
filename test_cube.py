@@ -102,8 +102,6 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(1, len(solver.stage_1_candidates))
         self.assertEqual(Cube.LEFT, solver.stage_1_candidates[0])
 
-
-
 class TestParser(unittest.TestCase):
 
     def test_is_string_valid(self):
@@ -284,48 +282,6 @@ class TestCube(unittest.TestCase):
                                      [GREEN, BLUE, YELLOW]]))
 
         self.run_test_manipulation(self.cube.rotate_front_cw, expected)
-
-        # Running another version
-        cube = Parser().parse_string_to_cube("    OBG\n" +
-                                             "    GGO\n" +
-                                             "    YGR\n" +
-                                             "YWB RYB WGW OOB\n" +
-                                             "WWW OOR YYB RRR\n" +
-                                             "YWG RYB WYW RRG\n" +
-                                             "    YBO\n" +
-                                             "    BBO\n" +
-                                             "    OGG")
-
-        expected = Parser().parse_string_to_cube("    YWY\n" +
-                                                 "    WWW\n" +
-                                                 "    GWB\n" +
-                                                 "OBY ROR YGO BRG\n" +
-                                                 "GBB YOY GGB ORR\n" +
-                                                 "GOO BRB ROG ORR\n" +
-                                                 "    WYW\n" +
-                                                 "    YYG\n" +
-                                                 "    WBW")
-        sys.stdout.flush()
-        print("\nCube Before Manipulation:\n\n")
-        print(cube)
-        sys.stdout.flush()
-        print("\nExpected Before Cube Manipulation:\n\n")
-        print(expected)
-        print("\n\n\n")
-        sys.stdout.flush()
-
-        cube.rotate_front_cw()
-
-        sys.stdout.flush()
-        print("\nCube After Manipulation:\n\n")
-        print(cube)
-        sys.stdout.flush()
-        print("\nExpected After Cube Manipulation:\n\n")
-        print(expected)
-        print("\n\n\n")
-        sys.stdout.flush()
-
-        self.assertEqual(cube, expected)
 
     def test_rotate_front_ccw(self):
         expected = Cube(front=Side([[RED, BLUE, WHITE],
