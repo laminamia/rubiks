@@ -129,3 +129,17 @@ class Solver(object):
 
         return len(self.stage_1_candidates) > 0
 
+    def solve_stage_1(self):
+        if self.determine_stage() >= Solver.STAGE_1:
+            pass
+
+        white_position = self.side_dict[WHITE]
+        logging.getLogger().debug("Moving white to top from " + str(white_position))
+        move_methods = self.methods_to_move_any_face_to_top_list[white_position]
+        for method in move_methods:
+            if method is not None:
+                method()
+
+        # todo: find a middle piece and then move into place
+        # todo: find corner piece and then move into place
+        for side in cube.

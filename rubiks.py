@@ -86,7 +86,7 @@ class Cube(object):
 
     def get_side_name(self, side):
         side_to_name = {self.front: Cube.FRONT, self.back: Cube.BACK, self.top: Cube.TOP,
-                self.bottom: Cube.BOTTOM, self.left: Cube.LEFT, self.right: Cube.RIGHT}
+                        self.bottom: Cube.BOTTOM, self.left: Cube.LEFT, self.right: Cube.RIGHT}
         return side_to_name[side]
 
     def rotate_cube_backward(self, num_times=1):
