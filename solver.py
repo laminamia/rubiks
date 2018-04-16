@@ -19,16 +19,31 @@ class Solver(object):
         self.cube = cube.copy()
         self.current_stage = Solver.STAGE_0
         self.methods_to_move_any_face_to_top_list = {
-            Cube.TOP: [[], []],
-            Cube.BOTTOM: [[self.cube.rotate_cube_forward, self.cube.rotate_cube_forward],
-                          [self.cube.rotate_cube_forward, self.cube.rotate_cube_forward]],
-            Cube.FRONT: [[self.cube.rotate_cube_backward], [self.cube.rotate_cube_forward]],
-            Cube.BACK: [[self.cube.rotate_cube_forward], [self.cube.rotate_cube_backward]],
-            Cube.LEFT: [[self.cube.rotate_cube_right, self.cube.rotate_cube_backward],
-                        [self.cube.rotate_cube_forward, self.cube.rotate_cube_left]],
-            Cube.RIGHT: [[self.cube.rotate_cube_left, self.cube.rotate_cube_backward],
-                         [self.cube.rotate_cube_forward, self.cube.rotate_cube_right]]}
+            Cube.TOP: [],
+            Cube.BOTTOM: [self.cube.rotate_cube_forward, self.cube.rotate_cube_forward],
+            Cube.FRONT: [self.cube.rotate_cube_backward],
+            Cube.BACK: [self.cube.rotate_cube_forward],
+            Cube.LEFT: [self.cube.rotate_cube_right, self.cube.rotate_cube_backward],
+            Cube.RIGHT: [self.cube.rotate_cube_left, self.cube.rotate_cube_backward]
+        }
+        self.methods_to_move_any_face_back = {
+            Cube.TOP: [],
+            Cube.BOTTOM: [self.cube.rotate_cube_backward, self.cube.rotate_cube_backward],
+            Cube.FRONT: [self.cube.rotate_cube_forward],
+            Cube.BACK: [self.cube.rotate_cube_backward],
+            Cube.LEFT: [self.cube.rotate_cube_forward, self.cube.rotate_cube_left],
+            Cube.RIGHT: [self.cube.rotate_cube_forward, self.cube.rotate_cube_right]
+        }
+        self.__init_side_dict()
         self.stage = self.__determine_stage()
+
+    def __init_side_dict(self):
+        self.side_dict = {self.cube.top.cubies[1][1]: Cube.TOP,
+                          self.cube.right.cubies[1][1]: Cube.RIGHT,
+                          self.cube.left.cubies[1][1]: Cube.LEFT,
+                          self.cube.bottom.cubies[1][1]: Cube.BOTTOM,
+                          self.cube.front.cubies[1][1]: Cube.FRONT,
+                          self.cube.back.cubies[1][1]: Cube.BACK}
 
     def is_solved(self):
         for side in self.__get_sides():
@@ -89,7 +104,8 @@ class Solver(object):
             else:
                 logging.getLogger().debug("Side %s stage_1_part_1 NOT solved", side_name)
 
-        if len(candidates) == 0: return False
+        if len(candidates) == 0:
+            return False
 
         # todo: consider flagging as part of the state of the solver the "top" that is the stage_1 solve
         for candidate_side in candidates:
@@ -99,7 +115,7 @@ class Solver(object):
             logging.getLogger().debug("Checking %s to see if it has stage_1_part_2 solved", side_name)
 
             moved = False
-            for method_name in method_list[0]:
+            for method_name in method_list:
                 if method_name is not None:
                     method_name()
                 moved = True
@@ -107,7 +123,7 @@ class Solver(object):
                         [self.cube.back, self.cube.left, self.cube.front, self.cube.right])
             logging.getLogger().debug("Side %s stage_1_part_2 %s", side_name, "solved" if found else "unsolved")
             if moved:
-                for method_name in method_list[1]:
+                for method_name in self.methods_to_move_any_face_back[side_name]:
                     method_name()
             if found: self.stage_1_candidates.append(side_name)
 

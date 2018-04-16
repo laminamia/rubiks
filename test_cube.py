@@ -67,6 +67,21 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(Solver.STAGE_0,
                          solver.determine_stage())
 
+    def test_solve_state_0(self):
+        cube = Parser().parse_string_to_cube("OOG\n" +
+                                             "BWG\n" +
+                                             "GYY\n" +
+                                             "GRR WGR GWW OYY\n" +
+                                             "ROO GGB WRO WBW\n" +
+                                             "YYB ORW OGW BBB\n" +
+                                             "YYB\n" +
+                                             "BYR\n" +
+                                             "ROR")
+        solver = Solver(cube)
+        self.assertEqual(Solver.STAGE_0,
+                         solver.determine_stage())
+        solver.solve_stage_0()
+
     def test_determine_top_state_1(self):
         # testing top at stage_1
         cube = Parser().parse_string_to_cube("    YWB\n" +
