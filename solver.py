@@ -133,13 +133,57 @@ class Solver(object):
         if self.determine_stage() >= Solver.STAGE_1:
             pass
 
+        self.move_white_to_top()
+
+        top_color = WHITE
+
+        while self.__stage_1_find_top_color_on_bottom(top_color):
+            pass
+
+        # todo: find corner piece and then move into place
+
+    def __stage_1_find_top_color_on_bottom(self, top_color):
+        # todo: find a middle piece and then move into place
+        # look for middle pieces on the bottom
+        bottom = self.cube.bottom
+        if bottom.cubies[0][1] == top_color:
+            self.__stage_1_move_top_color_from_bottom_to_top()
+            return True
+        elif bottom.cubies[1][0] == top_color:
+            self.cube.rotate_bottom_right()
+            self.__stage_1_move_top_color_from_bottom_to_top()
+            return True
+        elif bottom.cubies[1][2] == top_color:
+            self.cube.rotate_bottom_left()
+            self.__stage_1_move_top_color_from_bottom_to_top()
+            return True
+        elif bottom.cubies[2][1] == top_color:
+            self.cube.rotate_bottom_right()
+            self.cube.rotate_bottom_right()
+            self.__stage_1_move_top_color_from_bottom_to_top()
+            return True
+        else:
+            return False
+
+    def __stage_1_move_top_color_from_bottom_to_top(self):
+        adjacent_color = self.cube.front.cubies[2][1]
+        face_colors = {self.cube.front.get_center_color(): [self.cube.rotate_front_cw, self.cube.rotate_front_cw],
+                       self.cube.left.get_center_color(): [self.cube.rotate_bottom_left, self.cube.rotate_left_forward,
+                                                           self.cube.rotate_left_forward],
+                       self.cube.right.get_center_color(): [self.cube.rotate_bottom_right,
+                                                            self.cube.rotate_right_forward,
+                                                            self.cube.rotate_right_forward],
+                       self.cube.back.get_center_color(): [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right,
+                                                           self.cube.rotate_back_left, self.cube.rotate_back_left]
+                       }
+        manipulations = face_colors[adjacent_color]
+        for manipulation in manipulations:
+            manipulation()
+
+    def move_white_to_top(self):
         white_position = self.side_dict[WHITE]
         logging.getLogger().debug("Moving white to top from " + str(white_position))
         move_methods = self.methods_to_move_any_face_to_top_list[white_position]
         for method in move_methods:
             if method is not None:
                 method()
-
-        # todo: find a middle piece and then move into place
-        # todo: find corner piece and then move into place
-        for side in cube.
