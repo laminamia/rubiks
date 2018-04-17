@@ -7,12 +7,6 @@ import itertools
 # self.cube is copied with the intent that no manipulation will
 # occur to the cube after Solver takes control of it
 class Solver(object):
-    STAGE_UNKNOWN = -1
-    STAGE_0 = 0
-    STAGE_1 = 1
-    STAGE_SOLVED = 100
-    STAGES = [STAGE_UNKNOWN, STAGE_0, STAGE_1, STAGE_SOLVED]
-
     # Create Solver with copy of cube; once a cube is passed to Solver,
     # it is not intended to be modified by externally
     def __init__(self, cube):
@@ -68,20 +62,29 @@ class Solver(object):
                 "back": (self.cube.back, (self.cube.top, self.cube.left, self.cube.bottom, self.cube.right)),
                 "bottom": (self.cube.bottom, (self.cube.front, self.cube.right, self.cube.back, self.cube.left))}
 
-    def determine_stage(self):
+
+
+class StageEvaluator(object):
+    STAGE_UNKNOWN = -1
+    STAGE_0 = 0
+    STAGE_TOP_CROSS_SOLVED = 1
+    STAGE_SOLVED = 100
+    STAGES = [STAGE_UNKNOWN, STAGE_0, STAGE_TOP_CROSS_SOLVED, STAGE_SOLVED]
+
+   def determine_stage(self):
         self.stage = self.__determine_stage()
         return self.stage
 
     def __determine_stage(self):
-        if self.is_solved(): return Solver.STAGE_SOLVED
-        if self.__is_stage_1(): return Solver.STAGE_1
-        if not self.__is_stage_1(): return Solver.STAGE_0
-        return Solver.STAGE_UNKNOWN
+        if self.is_solved(): return StageEvaluator.STAGE_SOLVED
+        if self.__is_stage_1(): return StageEvaluator.STAGE_TOP_CROSS_SOLVED
+        if not self.__is_stage_1(): return StageEvaluator.STAGE_0
+        return StageEvaluator.STAGE_UNKNOWN
 
     def __is_stage_0(self):
         pass
 
-    def __is_stage_1(self):
+    def __is_top_cross_solved(self):
         # reset any stage_1 candidates
         self.stage_1_candidates = []
 
@@ -129,7 +132,14 @@ class Solver(object):
 
         return len(self.stage_1_candidates) > 0
 
-    def solve_stage_1(self):
+
+
+class TopCrossSolver(object):
+
+    def __init__(self, top_color):
+        self.top_color = top_color
+
+    def solve(self):
         if self.determine_stage() >= Solver.STAGE_1:
             pass
 
@@ -187,3 +197,4 @@ class Solver(object):
         for method in move_methods:
             if method is not None:
                 method()
+
