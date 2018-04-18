@@ -127,63 +127,57 @@ class StageEvaluator(object):
 
 class TopCrossSolver(object):
 
-    def __init__(self, top_color=WHITE):
+    def __init__(self, cube, top_color=WHITE):
         self.top_color = top_color
+        self.cube = cube
 
     def solve(self):
-        if self.determine_stage() >= Solver.TOP_CROSS_SOLVED:
-            return
 
-        top_color_position = self.cube.get_color_location(self.top_color)
+        if StageEvaluator(self.cube).determine_stage() >= StageEvaluator.STAGE_TOP_CROSS_SOLVED:
+            return True
 
-        logging.getLogger().debug("Moving " + str(self.top_color) + " to top from " + str(top_color_position))
+        logging.getLogger().debug(
+            "Moving " + str(self.top_color) + " to top from " + str(self.cube.get_color_location(self.top_color)))
 
-        manipulations = Solver.get_manipulation_to_move_face_to_top(self.cube, top_color_position)
+        self.cube.move_side_to_top(self.top_color)
 
-        for manipulation in manipulations:
-            if manipulation is not None:
-                manipulation()
-
-        while self.__stage_1_find_top_color_on_bottom(top_color):
+        # repeat until all top_colors on bottom are in place
+        while self.solve_cross_pieces_on_bottom():
             pass
 
         # todo: find corner piece and then move into place
 
-    def __stage_1_find_top_color_on_bottom(self, top_color):
-        # todo: find a middle piece and then move into place
-        # look for middle pieces on the bottom
+    def solve_cross_pieces_on_bottom(self):
         bottom = self.cube.bottom
-        if bottom.cubies[0][1] == top_color:
-            self.__stage_1_move_top_color_from_bottom_to_top()
-            return True
-        elif bottom.cubies[1][0] == top_color:
-            self.cube.rotate_bottom_right()
-            self.__stage_1_move_top_color_from_bottom_to_top()
-            return True
-        elif bottom.cubies[1][2] == top_color:
-            self.cube.rotate_bottom_left()
-            self.__stage_1_move_top_color_from_bottom_to_top()
-            return True
-        elif bottom.cubies[2][1] == top_color:
-            self.cube.rotate_bottom_right()
-            self.cube.rotate_bottom_right()
-            self.__stage_1_move_top_color_from_bottom_to_top()
-            return True
-        else:
-            return False
 
-    def __stage_1_move_top_color_from_bottom_to_top(self):
-        adjacent_color = self.cube.front.cubies[2][1]
-        face_colors = {self.cube.front.get_center_color(): [self.cube.rotate_front_cw, self.cube.rotate_front_cw],
-                       self.cube.left.get_center_color(): [self.cube.rotate_bottom_left, self.cube.rotate_left_forward,
-                                                           self.cube.rotate_left_forward],
-                       self.cube.right.get_center_color(): [self.cube.rotate_bottom_right,
-                                                            self.cube.rotate_right_forward,
-                                                            self.cube.rotate_right_forward],
-                       self.cube.back.get_center_color(): [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right,
-                                                           self.cube.rotate_back_left, self.cube.rotate_back_left]
-                       }
-        manipulations = face_colors[adjacent_color]
-        for manipulation in manipulations:
-            manipulation()
+        candidates_and_manipulations = [(bottom.cubies[0][1], []),
+                                        (bottom.cubies[1][0], [self.cube.rotate_bottom_right]),
+                                        (bottom.cubies[1][2], [self.cube.rotate_bottom_left]),
+                                        (bottom.cubies[2][1],
+                                         [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right])]
 
+        found = False
+        for candidate_color, manipulations in candidates_and_manipulations:
+            if candidate_color == self.top_color:
+                found = True
+                # move candidate to front
+                for manipulation in manipulations:
+                    manipulation()
+                # move candidate to top in correct cross location
+                adjacent_color = self.cube.front.cubies[2][1]
+                for manipulation in self.__get_manipulation_to_move_cross_piece_on_bottom_at_front_to_top(
+                        adjacent_color):
+                    manipulation()
+
+        return found
+
+    def __get_manipulation_to_move_cross_piece_on_bottom_at_front_to_top(self, candidate_color):
+        return {self.cube.front.get_center_color(): [self.cube.rotate_front_cw, self.cube.rotate_front_cw],
+                self.cube.left.get_center_color(): [self.cube.rotate_bottom_left, self.cube.rotate_left_forward,
+                                                    self.cube.rotate_left_forward],
+                self.cube.right.get_center_color(): [self.cube.rotate_bottom_right,
+                                                     self.cube.rotate_right_forward,
+                                                     self.cube.rotate_right_forward],
+                self.cube.back.get_center_color(): [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right,
+                                                    self.cube.rotate_back_left, self.cube.rotate_back_left]
+                }[candidate_color]

@@ -160,6 +160,7 @@ class TestStageEvaluator(unittest.TestCase):
         self.assertEqual(1, len(evaluator.stage_1_candidates))
         self.assertEqual(Cube.LEFT, evaluator.stage_1_candidates[0])
 
+
 class TestTopCrossSolver(unittest.TestCase):
 
     def test_solve_stage_1(self):
@@ -179,13 +180,17 @@ class TestTopCrossSolver(unittest.TestCase):
 
         self.assertEqual(StageEvaluator.STAGE_0,
                          StageEvaluator(evaluator.cube).determine_stage())
-        evaluator.solve_stage_1()
-        top = evaluator.cube.top
-        top_complete = all(top.get_center_color() == color for color in
-                           [c for row in top.cubies for c in row])
+
+        top_cross_solver = TopCrossSolver(cube)
+        top_cross_solver.solve()
+        top = top_cross_solver.cube.top
+        top_cross_complete = all(top.get_center_color() == color for color in
+                           [top.cubies[0][1], top.cubies[1][0], top.cubies[1][2], top.cubies[2][1]])
         print("Cube after solve stage 1:")
         print(evaluator.cube)
-        self.assertTrue(top_complete)
+        self.assertTrue(top_cross_complete)
+
+        # todo test side colors are matched for cross
 
 
 if __name__ == '__main__':
@@ -193,4 +198,6 @@ if __name__ == '__main__':
     #logging.basicConfig()
 
     suite = unittest.TestLoader().loadTestsFromTestCase(TestStageEvaluator)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestTopCrossSolver)
     unittest.TextTestRunner(verbosity=2).run(suite)
