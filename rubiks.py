@@ -84,10 +84,57 @@ class Cube(object):
         self.left = left
         self.right = right
 
+    def get_sides(self):
+        return {self.front, self.back, self.top, self.bottom, self.left, self.right}
+
+    def get_side_mapped_by_name(self):
+        return {Cube.FRONT: self.front,
+                Cube.BACK: self.back,
+                Cube.TOP: self.top,
+                Cube.BOTTOM: self.bottom,
+                Cube.LEFT: self.left,
+                Cube.RIGHT: self.right}
+
+    def get_color_location(self, color):
+        for side, location in {self.front: Cube.FRONT, self.back: Cube.BACK, self.top: Cube.TOP,
+                               self.bottom: Cube.BOTTOM, self.left: Cube.LEFT, self.right: Cube.RIGHT}.items():
+            if side.get_center_color() == color:
+                return location
+        return None
+
     def get_side_name(self, side):
         side_to_name = {self.front: Cube.FRONT, self.back: Cube.BACK, self.top: Cube.TOP,
                         self.bottom: Cube.BOTTOM, self.left: Cube.LEFT, self.right: Cube.RIGHT}
         return side_to_name[side]
+
+    def move_side_to_top(self, color):
+        side_name = self.get_color_location(color)
+        manipulations = {
+                Cube.TOP: [],
+                Cube.BOTTOM: [self.rotate_cube_forward, self.rotate_cube_forward],
+                Cube.FRONT: [self.rotate_cube_backward],
+                Cube.BACK: [self.rotate_cube_forward],
+                Cube.LEFT: [self.rotate_cube_right, self.rotate_cube_backward],
+                Cube.RIGHT: [self.rotate_cube_left, self.rotate_cube_backward]
+            }[side_name]
+        for manipulation in manipulations:
+            if manipulation is not None:
+                manipulation()
+        return self
+
+    def move_top_to_side(self, side_name):
+        manipulations = {
+                Cube.TOP: [],
+                Cube.BOTTOM: [self.rotate_cube_forward, self.rotate_cube_forward],
+                Cube.FRONT: [self.rotate_cube_forward],
+                Cube.BACK: [self.rotate_cube_backward],
+                Cube.LEFT: [self.rotate_cube_left, self.rotate_cube_forward],
+                Cube.RIGHT: [self.rotate_cube_right, self.rotate_cube_forward]
+            }[side_name]
+        for manipulation in manipulations:
+            if manipulation is not None:
+                manipulation()
+        return self
 
     def rotate_cube_backward(self, num_times=1):
         for i in range(num_times % 4):

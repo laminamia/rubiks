@@ -5,24 +5,24 @@ import logging
 import sys
 
 
-class TestSolver(unittest.TestCase):
+class TestStageEvaluator(unittest.TestCase):
 
     def setUp(self):
         self.solved_cube = Cube.create_solved_cube()
 
     def test_is_solved(self):
-        solver = Solver(self.solved_cube)
+        evaluator = StageEvaluator(self.solved_cube)
 
         # rotations of a solved cube should not change its state
-        self.assertTrue(solver.is_solved())
+        self.assertTrue(evaluator.is_solved())
         self.solved_cube.rotate_cube_right()
-        self.assertTrue(solver.is_solved())
+        self.assertTrue(evaluator.is_solved())
         self.solved_cube.rotate_cube_left()
-        self.assertTrue(solver.is_solved())
+        self.assertTrue(evaluator.is_solved())
         self.solved_cube.rotate_cube_forward(2)
-        self.assertTrue(solver.is_solved())
+        self.assertTrue(evaluator.is_solved())
         self.solved_cube.rotate_cube_backward()
-        self.assertTrue(solver.is_solved())
+        self.assertTrue(evaluator.is_solved())
 
         cube = self.solved_cube
         cube.rotate_top_right()
@@ -32,7 +32,7 @@ class TestSolver(unittest.TestCase):
         cube.rotate_left_backward()
         cube.rotate_front_cw()
 
-        self.assertFalse(Solver(cube).is_solved())
+        self.assertFalse(StageEvaluator(cube).is_solved())
 
     def test_determine_stage_0(self):
         cube = Parser().parse_string_to_cube("    ORG\n" +
@@ -44,27 +44,27 @@ class TestSolver(unittest.TestCase):
                                              "    RWR\n" +
                                              "    GRW\n" +
                                              "    BBW")
-        solver = Solver(cube)
-        self.assertEqual(Solver.STAGE_0, solver.determine_stage())
+        evaluator = StageEvaluator(cube)
+        self.assertEqual(StageEvaluator.STAGE_0, evaluator.determine_stage())
 
     def test_determine_state_solved(self):
-        solver = Solver(self.solved_cube)
-        self.assertEqual(Solver.STAGE_SOLVED,
-                         solver.determine_stage())
+        evaluator = StageEvaluator(self.solved_cube)
+        self.assertEqual(StageEvaluator.STAGE_SOLVED,
+                         evaluator.determine_stage())
 
     def test_determine_state_0(self):
-        cube = Parser().parse_string_to_cube("OOG\n" +
-                                             "BWG\n" +
-                                             "GYY\n" +
+        cube = Parser().parse_string_to_cube("    OOG\n" +
+                                             "    BWG\n" +
+                                             "    GYY\n" +
                                              "GRR WGR GWW OYY\n" +
                                              "ROO GGB WRO WBW\n" +
                                              "YYB ORW OGW BBB\n" +
-                                             "YYB\n" +
-                                             "BYR\n" +
-                                             "ROR")
-        solver = Solver(cube)
-        self.assertEqual(Solver.STAGE_0,
-                         solver.determine_stage())
+                                             "    YYB\n" +
+                                             "    BYR\n" +
+                                             "    ROR")
+        evaluator = StageEvaluator(cube)
+        self.assertEqual(StageEvaluator.STAGE_0,
+                         evaluator.determine_stage())
 
     def test_determine_top_state_1(self):
         # testing top at stage_1
@@ -77,11 +77,11 @@ class TestSolver(unittest.TestCase):
                                              "    WYW\n" +
                                              "    BYY\n" +
                                              "    WGW")
-        solver = Solver(cube)
-        self.assertEqual(Solver.STAGE_1,
-                         solver.determine_stage())
-        self.assertEqual(1, len(solver.stage_1_candidates))
-        self.assertEqual(Cube.TOP, solver.stage_1_candidates[0])
+        evaluator = StageEvaluator(cube)
+        self.assertEqual(StageEvaluator.STAGE_TOP_CROSS_SOLVED,
+                         evaluator.determine_stage())
+        self.assertEqual(1, len(evaluator.stage_1_candidates))
+        self.assertEqual(Cube.TOP, evaluator.stage_1_candidates[0])
 
     def test_determine_front_stage_1(self):
         # testing front at stage_1
@@ -94,9 +94,9 @@ class TestSolver(unittest.TestCase):
                                              "    OBY\n" +
                                              "    GBB\n" +
                                              "    GOO")
-        solver = Solver(cube)
-        self.assertEqual(Solver.STAGE_1,
-                         solver.determine_stage())
+        evaluator = StageEvaluator(cube)
+        self.assertEqual(StageEvaluator.STAGE_TOP_CROSS_SOLVED,
+                         evaluator.determine_stage())
 
     def test_determine_right_stage_1(self):
         cube = Parser().parse_string_to_cube("    GOR\n" +
@@ -109,9 +109,9 @@ class TestSolver(unittest.TestCase):
                                              "    GBB\n" +
                                              "    GOO")
         cube.rotate_cube_right()
-        solver = Solver(cube)
-        self.assertEqual(Solver.STAGE_1,
-                         solver.determine_stage())
+        evaluator = StageEvaluator(cube)
+        self.assertEqual(StageEvaluator.STAGE_TOP_CROSS_SOLVED,
+                         evaluator.determine_stage())
 
     def test_determine_bottom_stage_1(self):
         cube = Parser().parse_string_to_cube("    GOR\n" +
@@ -124,9 +124,9 @@ class TestSolver(unittest.TestCase):
                                              "    GBB\n" +
                                              "    GOO")
         cube.rotate_cube_forward()
-        solver = Solver(cube)
-        self.assertEqual(Solver.STAGE_1,
-                         solver.determine_stage())
+        evaluator = StageEvaluator(cube)
+        self.assertEqual(StageEvaluator.STAGE_TOP_CROSS_SOLVED,
+                         evaluator.determine_stage())
 
     def test_determine_back_stage_1(self):
         cube = Parser().parse_string_to_cube("    GOR\n" +
@@ -139,9 +139,9 @@ class TestSolver(unittest.TestCase):
                                              "    GBB\n" +
                                              "    GOO")
         cube.rotate_cube_forward(2)
-        solver = Solver(cube)
-        self.assertEqual(Solver.STAGE_1,
-                         solver.determine_stage())
+        evaluator = StageEvaluator(cube)
+        self.assertEqual(StageEvaluator.STAGE_TOP_CROSS_SOLVED,
+                         evaluator.determine_stage())
 
     def test_determine_left_stage_1(self):
         # testing left at stage_1
@@ -154,11 +154,13 @@ class TestSolver(unittest.TestCase):
                                              "    YBO\n" +
                                              "    BBO\n" +
                                              "    OGG")
-        solver = Solver(cube)
-        self.assertEqual(Solver.STAGE_1,
-                         solver.determine_stage())
-        self.assertEqual(1, len(solver.stage_1_candidates))
-        self.assertEqual(Cube.LEFT, solver.stage_1_candidates[0])
+        evaluator = StageEvaluator(cube)
+        self.assertEqual(StageEvaluator.STAGE_TOP_CROSS_SOLVED,
+                         evaluator.determine_stage())
+        self.assertEqual(1, len(evaluator.stage_1_candidates))
+        self.assertEqual(Cube.LEFT, evaluator.stage_1_candidates[0])
+
+class TestTopCrossSolver(unittest.TestCase):
 
     def test_solve_stage_1(self):
         cube = Parser().parse_string_to_cube("    BGY\n" +
@@ -171,18 +173,18 @@ class TestSolver(unittest.TestCase):
                                              "    WYR\n" +
                                              "    GBB")
 
-        solver = Solver(cube)
+        evaluator = StageEvaluator(cube)
         print("Cube before solve stage 1:")
-        print(solver.cube)
+        print(evaluator.cube)
 
-        self.assertEqual(Solver.STAGE_0,
-                         solver.determine_stage())
-        solver.solve_stage_1()
-        top = solver.cube.top
+        self.assertEqual(StageEvaluator.STAGE_0,
+                         StageEvaluator(evaluator.cube).determine_stage())
+        evaluator.solve_stage_1()
+        top = evaluator.cube.top
         top_complete = all(top.get_center_color() == color for color in
                            [c for row in top.cubies for c in row])
         print("Cube after solve stage 1:")
-        print(solver.cube)
+        print(evaluator.cube)
         self.assertTrue(top_complete)
 
 
@@ -190,5 +192,5 @@ if __name__ == '__main__':
     #logging.getLogger().setLevel(logging.DEBUG)
     #logging.basicConfig()
 
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestSolver)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestStageEvaluator)
     unittest.TextTestRunner(verbosity=2).run(suite)

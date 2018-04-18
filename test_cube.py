@@ -128,6 +128,28 @@ class TestCube(unittest.TestCase):
                          top=self.top.copy(),
                          bottom=self.bottom.copy())
 
+    def test_get_sides(self):
+        sides = self.cube.get_sides()
+        self.assertTrue(self.cube.top in sides)
+        self.assertTrue(self.cube.bottom in sides)
+        self.assertTrue(self.cube.left in sides)
+        self.assertTrue(self.cube.right in sides)
+        self.assertTrue(self.cube.front in sides)
+        self.assertTrue(self.cube.back in sides)
+        self.assertEqual(6, len(sides))
+
+    def test_get_color_side(self):
+        self.assertEqual(Cube.FRONT, self.cube.get_color_location(BLUE))
+        self.assertEqual(Cube.BACK, self.cube.get_color_location(GREEN))
+        self.assertEqual(Cube.LEFT, self.cube.get_color_location(RED))
+        self.assertEqual(Cube.RIGHT, self.cube.get_color_location(ORANGE))
+        self.assertEqual(Cube.TOP, self.cube.get_color_location(WHITE))
+        self.assertEqual(Cube.BOTTOM, self.cube.get_color_location(YELLOW))
+
+    def test_move_side_to_top(self):
+        self.cube.move_side_to_top(GREEN)
+        self.assertEqual(self.cube.top.center_color(), GREEN)
+
     def test_rotate_back_left(self):
         expected = Cube(front=self.front.copy(),
                         back=self.back.copy().rotate_face_colors_cw(),
@@ -577,8 +599,8 @@ class TestSide(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.DEBUG)
-    logging.basicConfig()
+    # logging.getLogger().setLevel(logging.DEBUG)
+    # logging.basicConfig()
 
     suite = unittest.TestLoader().loadTestsFromTestCase(TestCube)
     unittest.TextTestRunner(verbosity=2).run(suite)
