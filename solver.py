@@ -145,6 +145,31 @@ class TopCrossSolver(object):
         while self.solve_cross_pieces_on_bottom():
             pass
 
+        # todo clean this up
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.cube.rotate_cube_right()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.cube.rotate_cube_right()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.cube.rotate_cube_right()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+        self.solve_cross_pieces_on_front()
+
+        # repeat until all top_colors on bottom are in place
+        while self.solve_cross_pieces_on_bottom():
+            pass
+
         # todo: find corner piece and then move into place
 
     def solve_cross_pieces_on_bottom(self):
@@ -153,8 +178,8 @@ class TopCrossSolver(object):
         candidates_and_manipulations = [(bottom.cubies[0][1], []),
                                         (bottom.cubies[1][0], [self.cube.rotate_bottom_right]),
                                         (bottom.cubies[1][2], [self.cube.rotate_bottom_left]),
-                                        (bottom.cubies[2][1],
-                                         [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right])]
+                                        (bottom.cubies[2][1], [self.cube.rotate_bottom_right,
+                                                               self.cube.rotate_bottom_right])]
 
         found = False
         for candidate_color, manipulations in candidates_and_manipulations:
@@ -170,6 +195,83 @@ class TopCrossSolver(object):
                     manipulation()
 
         return found
+
+    def solve_cross_pieces_on_front(self):
+        front = self.cube.front
+        if front.cubies[0][1] == self.top_color:
+            adjacent_color = self.cube.top.cubies[2][1]
+            adjacent_color_location = self.cube.get_color_location(adjacent_color)
+            assert adjacent_color_location != Cube.TOP and adjacent_color_location != Cube.BOTTOM
+            manipulations_dict = {Cube.FRONT: [self.cube.rotate_front_cw, self.cube.rotate_right_forward,
+                                               self.cube.rotate_bottom_left, self.cube.rotate_right_backward,
+                                               self.cube.rotate_front_cw, self.cube.rotate_front_cw],
+                                  Cube.LEFT: [self.cube.rotate_left_backward],
+                                  Cube.RIGHT: [self.cube.rotate_front_cw, self.cube.rotate_right_backward,
+                                               self.cube.rotate_front_ccw],
+                                  Cube.BACK: [self.cube.rotate_front_cw, self.cube.rotate_front_cw,
+                                              self.cube.rotate_bottom_right, self.cube.rotate_right_forward,
+                                              self.cube.rotate_back_left, self.cube.rotate_right_backward]}
+            manipulations = manipulations_dict[adjacent_color_location]
+            for manipulation in manipulations:
+                manipulation()
+            return True
+
+        if front.cubies[1][0] == self.top_color:
+            adjacent_color = self.cube.left.cubies[1][2]
+            adjacent_color_location = self.cube.get_color_location(adjacent_color)
+            assert adjacent_color_location != Cube.TOP and adjacent_color_location != Cube.BOTTOM
+            manipulations_dict = {Cube.FRONT: [self.cube.rotate_left_forward, self.cube.rotate_bottom_right,
+                                               self.cube.rotate_front_cw, self.cube.rotate_front_cw,
+                                               self.cube.rotate_left_backward],
+                                  Cube.LEFT: [self.cube.rotate_left_backward],
+                                  Cube.RIGHT: [self.cube.rotate_front_cw, self.cube.rotate_front_cw,
+                                               self.cube.rotate_right_backward,
+                                               self.cube.rotate_front_cw, self.cube.rotate_front_cw],
+                                  Cube.BACK: [self.cube.rotate_left_forward, self.cube.rotate_bottom_left,
+                                              self.cube.rotate_back_left, self.cube.rotate_back_left,
+                                              self.cube.rotate_left_backward]}
+            manipulations = manipulations_dict[adjacent_color_location]
+            for manipulation in manipulations:
+                manipulation()
+            return True
+
+        if front.cubies[1][2] == self.top_color:
+            adjacent_color = self.cube.right.cubies[1][0]
+            adjacent_color_location = self.cube.get_color_location(adjacent_color)
+            assert adjacent_color_location != Cube.TOP and adjacent_color_location != Cube.BOTTOM
+            manipulations_dict = {Cube.FRONT: [self.cube.rotate_right_forward, self.cube.rotate_bottom_left,
+                                               self.cube.rotate_front_cw, self.cube.rotate_front_cw,
+                                               self.cube.rotate_right_backward],
+                                  Cube.LEFT: [self.cube.rotate_front_cw, self.cube.rotate_front_cw,
+                                              self.cube.rotate_left_backward,
+                                              self.cube.rotate_front_cw, self.cube.rotate_front_cw],
+                                  Cube.RIGHT: [self.cube.rotate_right_backward],
+                                  Cube.BACK: [self.cube.rotate_right_forward, self.cube.rotate_bottom_right,
+                                              self.cube.rotate_back_left, self.cube.rotate_back_left,
+                                              self.cube.rotate_right_backward]}
+            manipulations = manipulations_dict[adjacent_color_location]
+            for manipulation in manipulations:
+                manipulation()
+            return True
+
+        if front.cubies[2][1] == self.top_color:
+            adjacent_color = self.cube.right.cubies[1][0]
+            adjacent_color_location = self.cube.get_color_location(adjacent_color)
+            assert adjacent_color_location != Cube.TOP and adjacent_color_location != Cube.BOTTOM
+            manipulations_dict = {Cube.FRONT: [self.cube.rotate_bottom_right, self.cube.rotate_right_backward,
+                                               self.cube.rotate_front_ccw, self.cube.rotate_right_forward],
+                                  Cube.LEFT: [self.cube.rotate_front_cw, self.cube.rotate_left_backward,
+                                              self.cube.rotate_front_ccw],
+                                  Cube.RIGHT: [self.cube.rotate_front_ccw, self.cube.rotate_right_backward,
+                                               self.cube.rotate_front_cw],
+                                  Cube.BACK: [self.cube.rotate_bottom_right, self.cube.rotate_right_forward,
+                                              self.cube.rotate_back_left, self.cube.rotate_right_backward]}
+            manipulations = manipulations_dict[adjacent_color_location]
+            for manipulation in manipulations:
+                manipulation()
+            return True
+
+        return False
 
     def __get_manipulation_to_move_cross_piece_on_bottom_at_front_to_top(self, candidate_color):
         return {self.cube.front.get_center_color(): [self.cube.rotate_front_cw, self.cube.rotate_front_cw],
