@@ -163,7 +163,19 @@ class TestStageEvaluator(unittest.TestCase):
 
 class TestTopCrossSolver(unittest.TestCase):
 
-    def test_solve_stage_1(self):
+    def test_is_done(self):
+        cube = Parser().parse_string_to_cube("    YWB\n" +
+                                             "    WWW\n" +
+                                             "    YWG\n" +
+                                             "BRG OBY ROR YGO\n" +
+                                             "ORR GBB YOY GGB\n" +
+                                             "ORR GOO BRB ROG\n" +
+                                             "    WYW\n" +
+                                             "    BYY\n" +
+                                             "    WGW")
+        self.assertTrue(TopCrossSolver(cube).is_done())
+
+    def test_solve_top_cross_1(self):
         cube = Parser().parse_string_to_cube("    BGY\n" +
                                              "    RWG\n" +
                                              "    RYO\n" +
@@ -186,16 +198,83 @@ class TestTopCrossSolver(unittest.TestCase):
         top = top_cross_solver.cube.top
         top_cross_complete = all(top.get_center_color() == color for color in
                            [top.cubies[0][1], top.cubies[1][0], top.cubies[1][2], top.cubies[2][1]])
+        top_cross_complete = top_cross_complete and all(side.get_center_color() == side.cubies[0][1]
+                                                        for side in [top_cross_solver.cube.front,
+                                                                     top_cross_solver.cube.left,
+                                                                     top_cross_solver.cube.right,
+                                                                     top_cross_solver.cube.back])
         print("Cube after solve stage 1:")
         print(evaluator.cube)
         self.assertTrue(top_cross_complete)
 
-        # todo test side colors are matched for cross
+    def test_solve_top_cross_2(self):
+        cube = Parser().parse_string_to_cube("    WWG\n" +
+                                             "    BWO\n" +
+                                             "    OOW\n" +
+                                             "OYB YGG RWW OBB\n" +
+                                             "YRB RBR WOG RGR\n" +
+                                             "GBR WWY OYB YOY\n" +
+                                             "    BGG\n" +
+                                             "    OYG\n" +
+                                             "    RYR")
+
+        evaluator = StageEvaluator(cube)
+        print("Cube before solve stage 1:")
+        print(evaluator.cube)
+
+        self.assertEqual(StageEvaluator.STAGE_0,
+                         StageEvaluator(evaluator.cube).determine_stage())
+
+        top_cross_solver = TopCrossSolver(cube)
+        top_cross_solver.solve()
+        top = top_cross_solver.cube.top
+        top_cross_complete = all(top.get_center_color() == color for color in
+                           [top.cubies[0][1], top.cubies[1][0], top.cubies[1][2], top.cubies[2][1]])
+        top_cross_complete = top_cross_complete and all(side.get_center_color() == side.cubies[0][1]
+                                                        for side in [top_cross_solver.cube.front,
+                                                                     top_cross_solver.cube.left,
+                                                                     top_cross_solver.cube.right,
+                                                                     top_cross_solver.cube.back])
+        print("Cube after solve stage 1:")
+        print(evaluator.cube)
+        self.assertTrue(top_cross_complete)
+
+    def test_solve_top_cross_3(self):
+        cube = Parser().parse_string_to_cube("    RWY\n" +
+                                             "    WWW\n" +
+                                             "    WWB\n" +
+                                             "YGO GOW RRO BBG\n" +
+                                             "BRB OBG YOB YGR\n" +
+                                             "ROY ORR BGW OOW\n" +
+                                             "    GYY\n" +
+                                             "    YYR\n" +
+                                             "    GGB")
+
+        evaluator = StageEvaluator(cube)
+        ddprint("Cube before solve stage 1:")
+        print(evaluator.cube)
+
+        self.assertEqual(StageEvaluator.STAGE_0,
+                         StageEvaluator(evaluator.cube).determine_stage())
+
+        top_cross_solver = TopCrossSolver(cube)
+        top_cross_solver.solve()
+        top = top_cross_solver.cube.top
+        top_cross_complete = all(top.get_center_color() == color for color in
+                           [top.cubies[0][1], top.cubies[1][0], top.cubies[1][2], top.cubies[2][1]])
+        top_cross_complete = top_cross_complete and all(side.get_center_color() == side.cubies[0][1]
+                                                        for side in [top_cross_solver.cube.front,
+                                                                     top_cross_solver.cube.left,
+                                                                     top_cross_solver.cube.right,
+                                                                     top_cross_solver.cube.back])
+        print("Cube after solve stage 1:")
+        print(evaluator.cube)
+        self.assertTrue(top_cross_complete)
 
 
 if __name__ == '__main__':
-    #logging.getLogger().setLevel(logging.DEBUG)
-    #logging.basicConfig()
+    # logging.getLogger().setLevel(logging.DEBUG)
+    # logging.basicConfig()
 
     suite = unittest.TestLoader().loadTestsFromTestCase(TestStageEvaluator)
     unittest.TextTestRunner(verbosity=2).run(suite)

@@ -95,6 +95,9 @@ class Cube(object):
                 Cube.LEFT: self.left,
                 Cube.RIGHT: self.right}
 
+    def get_side_by_name(self, side_name):
+        return self.get_side_mapped_by_name()[side_name]
+
     def get_color_location(self, color):
         for side, location in {self.front: Cube.FRONT, self.back: Cube.BACK, self.top: Cube.TOP,
                                self.bottom: Cube.BOTTOM, self.left: Cube.LEFT, self.right: Cube.RIGHT}.items():
