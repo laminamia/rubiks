@@ -159,6 +159,41 @@ class TopSolver(object):
         while self.solve_corners_on_bottom():
             pass
 
+    def solve_corners_on_side_bottom_row(self):
+        candidates_and_adj_sides = [(self.cube.front.cubies[2][0], (Cube.LEFT, Cube.FRONT)),
+                                    (self.cube.front.cubies[2][2], (Cube.FRONT, Cube.RIGHT))]
+
+        for candidate, adjacent_sides in candidates_and_adj_sides:
+            if candidate != self.top_color:
+                continue
+
+            adjacent_side_color = None
+            adjacent_bottom_color = None
+            if Cube.LEFT in adjacent_sides:
+                adjacent_side_color = self.cube.left.cubies[2][2]
+                adjacent_bottom_color = self.cube.bottom.cubies[0][0]
+            if Cube.RIGHT in adjacent_sides:
+                adjacent_side_color = self.cube.right.cubies[2][0]
+                adjacent_bottom_color = self.cube.bottom.cubies[0][2]
+
+            side_color_side_name = self.cube.get_color_location(adjacent_side_color)
+            bottom_color_side_name = self.cube.get_color_location(adjacent_bottom_color)
+
+            # corner not at location of adjacent colors
+            if set(adjacent_sides) != {side_color_side_name, bottom_color_side_name}:
+                sides_to_manipulations = {(frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.FRONT, Cube.RIGHT})):
+                                          [],
+                                          (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.RIGHT, Cube.BACK})):
+                                          [],
+                                          (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.BACK, Cube.LEFT})):
+                                          [],
+                                          (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.RIGHT, Cube.BACK})):
+                                          [],
+                                          (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.BACK, Cube.LEFT})):
+                                          [],
+                                          (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.LEFT, Cube.FRONT})):
+                                          []}
+
     def solve_corners_on_bottom(self):
         candidates_and_adjacent_sides = [(self.cube.bottom.cubies[0][0], (Cube.LEFT, Cube.FRONT)),
                                          (self.cube.bottom.cubies[0][2], (Cube.FRONT, Cube.RIGHT)),
