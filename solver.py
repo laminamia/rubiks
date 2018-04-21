@@ -25,38 +25,42 @@ class Solver(object):
 
 
 class StageEvaluator(object):
-    STAGE_UNKNOWN = -1
     STAGE_0 = 0
     STAGE_TOP_CROSS_SOLVED = 1
+    STAGE_TOP_SOLVED = 2
     STAGE_SOLVED = 100
-    STAGES = [STAGE_UNKNOWN, STAGE_0, STAGE_TOP_CROSS_SOLVED, STAGE_SOLVED]
+    STAGES = [STAGE_0, STAGE_TOP_CROSS_SOLVED, STAGE_SOLVED]
 
     def __init__(self, cube):
         self.cube = cube
+        self.stage = self.STAGE_0
 
     def determine_stage(self):
         self.stage = self.__determine_stage()
         return self.stage
 
     def is_solved(self):
+        solved = True
         for side in self.cube.get_sides():
-            return all(side.get_center_color() == color for color in
-                       [c for row in side.cubies for c in row])
+            colors = [c for row in side.cubies for c in row]
+            solved = solved and all(side.get_center_color() == color for color in colors)
+        return solved
 
     def __determine_stage(self):
         if self.is_solved():
             return StageEvaluator.STAGE_SOLVED
-        if self.__is_top_cross_solved():
-            return StageEvaluator.STAGE_TOP_CROSS_SOLVED
-        else:
+
+        if not self.__is_top_cross_solved():
             return StageEvaluator.STAGE_0
 
-    def __is_stage_0(self):
-        pass
+        if not self.__is_top_solved():
+            return StageEvaluator.STAGE_TOP_CROSS_SOLVED
+
+        return StageEvaluator.STAGE_TOP_SOLVED
 
     def __is_top_cross_solved(self):
-        # reset any stage_1 candidates
-        self.stage_1_candidates = []
+        # reset any stage candidates
+        self.top_cross_candidates = []
 
         # identify any faces that are candidates for having state_1 complete
         sides = self.cube.get_sides()
@@ -80,12 +84,11 @@ class StageEvaluator(object):
         if len(candidates) == 0:
             return False
 
-        # todo: consider flagging as part of the state of the solver the "top" that is the stage_1 solve
         for candidate_side in candidates:
-            color = candidate_side.center_color()
+            color = candidate_side.get_center_color()
             side_name = self.cube.get_color_location(color)
 
-            logging.getLogger().debug("Checking %s to see if it has stage_1_part_2 solved", side_name)
+            logging.getLogger().debug("Checking %s to see if it has stage_top_cross_solved is solved", side_name)
 
             self.cube.move_side_to_top(color)
 
@@ -93,9 +96,65 @@ class StageEvaluator(object):
                         [self.cube.back, self.cube.left, self.cube.front, self.cube.right])
             logging.getLogger().debug("Side %s stage_1_part_2 %s", side_name, "solved" if found else "unsolved")
             self.cube.move_top_to_side(side_name)
-            if found: self.stage_1_candidates.append(side_name)
 
-        return len(self.stage_1_candidates) > 0
+            if found:
+                self.top_cross_candidates.append(side_name)
+
+        return len(self.top_cross_candidates) > 0
+
+    def __is_top_solved(self):
+        if len(self.top_cross_candidates) == 0:
+            return False
+
+        # reset any stage candidates
+        self.top_solved_candidates = []
+
+        for side_name in self.top_cross_candidates:
+            candidate_side = self.cube.get_side_by_name(side_name)
+            center_color = candidate_side.get_center_color()
+            self.cube.move_side_to_top(center_color)
+
+            logging.getLogger().debug("Checking %s to see if it has stage_top_solved is solved", side_name)
+
+            if not all(center_color == corner_color for corner_color in
+                       [self.cube.top.cubies[0][0], self.cube.top.cubies[0][2],
+                        self.cube.top.cubies[2][0], self.cube.top.cubies[2][2]]):
+                # go to next candidate; this one was a loss
+                continue
+
+            found = all(side.cubies[0][0] == side.get_center_color() and
+                        side.cubies[0][2] == side.get_center_color() for side in
+                        [self.cube.back, self.cube.front, self.cube.left, self.cube.right])
+            logging.getLogger().debug("Side %s stage_top_solved %s", side_name, "solved" if found else "unsolved")
+            self.cube.move_top_to_side(side_name)
+
+            if found:
+                self.top_solved_candidates.append(side_name)
+
+        return len(self.top_solved_candidates) > 0
+
+
+class TopSolver(object):
+
+    def __init__(self, cube, top_color=WHITE):
+        self.cube = cube
+        self.top_color = top_color
+        self.cube.move_side_to_top(self.top_color)
+
+    def is_done(self):
+        sub_solver = TopCrossSolver(self.cube, self.top_color)
+        if not sub_solver.is_done():
+            return False
+        self.cube.move_side_to_top(self.top_color)
+        top = self.cube.top
+        top_corners_complete = all(top.get_center_color() == color for color in
+                                   [top.cubies[0][0], top.cubies[0][2], top.cubies[2][0], top.cubies[2][2]])
+        if not top_corners_complete:
+            return False
+
+        return all(side.get_center_color() == side.cubies[0][0] and side.get_center_color() == side.cubies[0][2]
+                   for side in [self.cube.front, self.cube.left, self.cube.right, self.cube.back])
+
 
 
 class TopCrossSolver(object):
@@ -103,8 +162,10 @@ class TopCrossSolver(object):
     def __init__(self, cube, top_color=WHITE):
         self.top_color = top_color
         self.cube = cube
+        self.cube.move_side_to_top(self.top_color)
 
     def is_done(self):
+        self.cube.move_side_to_top(self.top_color)
         top = self.cube.top
         top_cross_complete = all(top.get_center_color() == color for color in
                                  [top.cubies[0][1], top.cubies[1][0], top.cubies[1][2], top.cubies[2][1]])
@@ -127,20 +188,25 @@ class TopCrossSolver(object):
             # check bottom
             while self.solve_cross_pieces_on_bottom():
                 pass
+
             # check top
             while self.solve_cross_pieces_on_top():
                 pass
+
             # check front
             while self.solve_cross_pieces_on_front():
                 pass
+
             # check left
             self.cube.rotate_cube_right()
             while self.solve_cross_pieces_on_front():
                 pass
+
             # check back
             self.cube.rotate_cube_right()
             while self.solve_cross_pieces_on_front():
                 pass
+
             # check right
             self.cube.rotate_cube_right()
             while self.solve_cross_pieces_on_front():
@@ -161,6 +227,7 @@ class TopCrossSolver(object):
                 side = self.cube.get_side_by_name(adjacent_side)
                 # check to see if candidate already is in the correct position
                 adjacent_color = side.cubies[0][1]
+
                 # if in correct position, move on to next candidate
                 if adjacent_color == side.get_center_color():
                     continue
@@ -209,21 +276,21 @@ class TopCrossSolver(object):
         # rotate bottom so that candidate is lined up with correct color
         if adjacent_side != destination_side:
             manipulations_map = {(Cube.FRONT, Cube.LEFT): [self.cube.rotate_bottom_left],
-                             (Cube.FRONT, Cube.RIGHT): [self.cube.rotate_bottom_right],
-                             (Cube.FRONT, Cube.BACK): [self.cube.rotate_bottom_left,
-                                                       self.cube.rotate_bottom_left],
-                             (Cube.LEFT, Cube.FRONT): [self.cube.rotate_bottom_right],
-                             (Cube.LEFT, Cube.RIGHT): [self.cube.rotate_bottom_right,
-                                                       self.cube.rotate_bottom_right],
-                             (Cube.LEFT, Cube.BACK): [self.cube.rotate_bottom_left],
-                             (Cube.RIGHT, Cube.FRONT): [self.cube.rotate_bottom_left],
-                             (Cube.RIGHT, Cube.LEFT): [self.cube.rotate_bottom_left,
-                                                       self.cube.rotate_bottom_left],
-                             (Cube.RIGHT, Cube.BACK): [self.cube.rotate_bottom_right],
-                             (Cube.BACK, Cube.FRONT): [self.cube.rotate_bottom_left,
-                                                       self.cube.rotate_bottom_left],
-                             (Cube.BACK, Cube.LEFT): [self.cube.rotate_bottom_right],
-                             (Cube.BACK, Cube.RIGHT): [self.cube.rotate_bottom_left]}
+                                 (Cube.FRONT, Cube.RIGHT): [self.cube.rotate_bottom_right],
+                                 (Cube.FRONT, Cube.BACK): [self.cube.rotate_bottom_left,
+                                                           self.cube.rotate_bottom_left],
+                                 (Cube.LEFT, Cube.FRONT): [self.cube.rotate_bottom_right],
+                                 (Cube.LEFT, Cube.RIGHT): [self.cube.rotate_bottom_right,
+                                                           self.cube.rotate_bottom_right],
+                                 (Cube.LEFT, Cube.BACK): [self.cube.rotate_bottom_left],
+                                 (Cube.RIGHT, Cube.FRONT): [self.cube.rotate_bottom_left],
+                                 (Cube.RIGHT, Cube.LEFT): [self.cube.rotate_bottom_left,
+                                                           self.cube.rotate_bottom_left],
+                                 (Cube.RIGHT, Cube.BACK): [self.cube.rotate_bottom_right],
+                                 (Cube.BACK, Cube.FRONT): [self.cube.rotate_bottom_left,
+                                                           self.cube.rotate_bottom_left],
+                                 (Cube.BACK, Cube.LEFT): [self.cube.rotate_bottom_right],
+                                 (Cube.BACK, Cube.RIGHT): [self.cube.rotate_bottom_left]}
 
             manipulations = manipulations_map[(adjacent_side, destination_side)]
             for manipulation in manipulations:
@@ -313,14 +380,3 @@ class TopCrossSolver(object):
             return True
 
         return False
-
-    def __get_manipulation_to_move_cross_piece_on_bottom_at_front_to_top(self, candidate_color):
-        return {self.cube.front.get_center_color(): [self.cube.rotate_front_cw, self.cube.rotate_front_cw],
-                self.cube.left.get_center_color(): [self.cube.rotate_bottom_left, self.cube.rotate_left_forward,
-                                                    self.cube.rotate_left_forward],
-                self.cube.right.get_center_color(): [self.cube.rotate_bottom_right,
-                                                     self.cube.rotate_right_forward,
-                                                     self.cube.rotate_right_forward],
-                self.cube.back.get_center_color(): [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right,
-                                                    self.cube.rotate_back_left, self.cube.rotate_back_left]
-                }[candidate_color]

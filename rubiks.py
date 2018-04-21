@@ -54,13 +54,13 @@ class Cube(object):
     @staticmethod
     def create_solved_cube():
         front = Side.create_unicolor_side(BLUE)
-        back = Side.create_unicolor_side(front.center_color().opposite())
+        back = Side.create_unicolor_side(front.get_center_color().opposite())
 
         left = Side.create_unicolor_side(RED)
-        right = Side.create_unicolor_side(left.center_color().opposite())
+        right = Side.create_unicolor_side(left.get_center_color().opposite())
 
         top = Side.create_unicolor_side(WHITE)
-        bottom = Side.create_unicolor_side(top.center_color().opposite())
+        bottom = Side.create_unicolor_side(top.get_center_color().opposite())
 
         return Cube(front, back, left, right, top, bottom)
 
@@ -85,7 +85,7 @@ class Cube(object):
         self.right = right
 
     def get_sides(self):
-        return {self.front, self.back, self.top, self.bottom, self.left, self.right}
+        return [self.front, self.back, self.top, self.bottom, self.left, self.right]
 
     def get_side_mapped_by_name(self):
         return {Cube.FRONT: self.front,
@@ -131,8 +131,8 @@ class Cube(object):
                 Cube.BOTTOM: [self.rotate_cube_forward, self.rotate_cube_forward],
                 Cube.FRONT: [self.rotate_cube_forward],
                 Cube.BACK: [self.rotate_cube_backward],
-                Cube.LEFT: [self.rotate_cube_left, self.rotate_cube_forward],
-                Cube.RIGHT: [self.rotate_cube_right, self.rotate_cube_forward]
+                Cube.LEFT: [self.rotate_cube_forward, self.rotate_cube_left],
+                Cube.RIGHT: [self.rotate_cube_forward, self.rotate_cube_right]
             }[side_name]
         for manipulation in manipulations:
             if manipulation is not None:
@@ -378,7 +378,7 @@ class Side(object):
         return '\n'.join([''.join([str(color) for color in row])
                           for row in self.cubies])
 
-    def center_color(self):
+    def get_center_color(self):
         return self.cubies[1][1]
 
     def get_row(self, row_idx):
@@ -392,9 +392,6 @@ class Side(object):
 
     def is_side_unicolor(self):
         return all(c == self.cubies[0][0] for c in itertools.chain(*self.cubies))
-
-    def get_center_color(self):
-        return self.cubies[1][1];
 
     def rotate_face_colors_ccw(self):
         # rotate turned face pieces - middles

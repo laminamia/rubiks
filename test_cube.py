@@ -148,7 +148,51 @@ class TestCube(unittest.TestCase):
 
     def test_move_side_to_top(self):
         self.cube.move_side_to_top(GREEN)
-        self.assertEqual(self.cube.top.center_color(), GREEN)
+        self.assertEqual(self.cube.top.get_center_color(), GREEN)
+
+    def test_move_side_to_top_2(self):
+        self.cube.move_side_to_top(RED)
+        self.assertEqual(self.cube.top.get_center_color(), RED)
+
+    def test_move_side_to_top_3(self):
+        self.cube.move_side_to_top(BLUE)
+        self.assertEqual(self.cube.top.get_center_color(), BLUE)
+
+    def test_move_side_to_top_4(self):
+        self.cube.move_side_to_top(YELLOW)
+        self.assertEqual(self.cube.top.get_center_color(), YELLOW)
+
+    def test_move_side_to_top_5(self):
+        self.cube.move_side_to_top(WHITE)
+        self.assertEqual(self.cube.top.get_center_color(), WHITE)
+
+    def test_move_side_to_top_6(self):
+        self.cube.move_side_to_top(ORANGE)
+        self.assertEqual(self.cube.top.get_center_color(), ORANGE)
+
+    def test_move_top_to_side_left(self):
+            self.cube.move_top_to_side(Cube.LEFT)
+            self.assertEqual(self.cube.left.get_center_color(), WHITE)
+
+    def test_move_top_to_side_right(self):
+        self.cube.move_top_to_side(Cube.RIGHT)
+        self.assertEqual(self.cube.right.get_center_color(), WHITE)
+
+    def test_move_top_to_side_top(self):
+        self.cube.move_top_to_side(Cube.TOP)
+        self.assertEqual(self.cube.top.get_center_color(), WHITE)
+
+    def test_move_top_to_side_bottom(self):
+        self.cube.move_top_to_side(Cube.BOTTOM)
+        self.assertEqual(self.cube.bottom.get_center_color(), WHITE)
+
+    def test_move_top_to_side_front(self):
+        self.cube.move_top_to_side(Cube.FRONT)
+        self.assertEqual(self.cube.front.get_center_color(), WHITE)
+
+    def test_move_top_to_side_back(self):
+        self.cube.move_top_to_side(Cube.BACK)
+        self.assertEqual(self.cube.back.get_center_color(), WHITE)
 
     def test_rotate_back_left(self):
         expected = Cube(front=self.front.copy(),
