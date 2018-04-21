@@ -128,6 +128,14 @@ class TestCube(unittest.TestCase):
                          top=self.top.copy(),
                          bottom=self.bottom.copy())
 
+    def test_get_side_by_color(self):
+        self.assertEqual(WHITE, self.cube.get_side_by_color(WHITE).get_center_color())
+        self.assertEqual(YELLOW, self.cube.get_side_by_color(YELLOW).get_center_color())
+        self.assertEqual(BLUE, self.cube.get_side_by_color(BLUE).get_center_color())
+        self.assertEqual(ORANGE, self.cube.get_side_by_color(ORANGE).get_center_color())
+        self.assertEqual(GREEN, self.cube.get_side_by_color(GREEN).get_center_color())
+        self.assertEqual(RED, self.cube.get_side_by_color(RED).get_center_color())
+
     def test_get_sides(self):
         sides = self.cube.get_sides()
         self.assertTrue(self.cube.top in sides)

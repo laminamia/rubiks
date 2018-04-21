@@ -98,10 +98,13 @@ class Cube(object):
     def get_side_by_name(self, side_name):
         return self.get_side_mapped_by_name()[side_name]
 
-    def get_color_location(self, color):
+    def get_side_by_color(self, center_color):
+        return self.get_side_by_name(self.get_color_location(center_color))
+
+    def get_color_location(self, center_color):
         for side, location in {self.front: Cube.FRONT, self.back: Cube.BACK, self.top: Cube.TOP,
                                self.bottom: Cube.BOTTOM, self.left: Cube.LEFT, self.right: Cube.RIGHT}.items():
-            if side.get_center_color() == color:
+            if side.get_center_color() == center_color:
                 return location
         return None
 

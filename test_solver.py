@@ -416,7 +416,22 @@ class TestTopCrossSolver(unittest.TestCase):
         # print(evaluator.cube)
         self.assertTrue(top_cross_complete)
 
+
 class TestTopSolver(unittest.TestCase):
+
+    def test_init_raises_assertion(self):
+        cube = Parser().parse_string_to_cube("    OOG\n" +
+                                             "    BWG\n" +
+                                             "    GYY\n" +
+                                             "GRR WGR GWW OYY\n" +
+                                             "ROO GGB WRO WBW\n" +
+                                             "YYB ORW OGW BBB\n" +
+                                             "    YYB\n" +
+                                             "    BYR\n" +
+                                             "    ROR")
+        with self.assertRaises(AssertionError) as context:
+            TopSolver(cube)
+        self.assertTrue("Top cross not solved" in str(context.exception))
 
     def test_is_done(self):
         cube = Parser().parse_string_to_cube("    OGY\n" +
@@ -431,6 +446,21 @@ class TestTopSolver(unittest.TestCase):
         solver = TopSolver(cube, WHITE)
         done = solver.is_done()
         self.assertTrue(done)
+
+    def test_solve_1(self):
+        cube = Parser().parse_string_to_cube("    YWB\n" +
+                                             "    WWW\n" +
+                                             "    YWG\n" +
+                                             "BRG OBY ROR YGO\n" +
+                                             "ORR GBB YOY GGB\n" +
+                                             "ORR GOO BRB ROG\n" +
+                                             "    WYW\n" +
+                                             "    BYY\n" +
+                                             "    WGW")
+        solver = TopSolver(cube, WHITE)
+        solver.solve()
+        # todo develop native test rather than relying on stage evaluator
+        self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, StageEvaluator(cube).determine_stage())
 
 
 if __name__ == '__main__':

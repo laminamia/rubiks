@@ -140,11 +140,10 @@ class TopSolver(object):
         self.cube = cube
         self.top_color = top_color
         self.cube.move_side_to_top(self.top_color)
+        self.sub_solver = TopCrossSolver(self.cube, self.top_color)
+        assert self.sub_solver.is_done(), "Top cross not solved"
 
     def is_done(self):
-        sub_solver = TopCrossSolver(self.cube, self.top_color)
-        if not sub_solver.is_done():
-            return False
         self.cube.move_side_to_top(self.top_color)
         top = self.cube.top
         top_corners_complete = all(top.get_center_color() == color for color in
@@ -155,6 +154,70 @@ class TopSolver(object):
         return all(side.get_center_color() == side.cubies[0][0] and side.get_center_color() == side.cubies[0][2]
                    for side in [self.cube.front, self.cube.left, self.cube.right, self.cube.back])
 
+    def solve(self):
+        # while not self.is_done():
+        while self.solve_corners_on_bottom():
+            pass
+
+    def solve_corners_on_bottom(self):
+        found = False
+        candidates_and_adjacent_sides = [(self.cube.bottom.cubies[0][0], (Cube.LEFT, Cube.FRONT)),
+                                         (self.cube.bottom.cubies[0][2], (Cube.FRONT, Cube.RIGHT)),
+                                         (self.cube.bottom.cubies[2][0], (Cube.BACK, Cube.LEFT)),
+                                         (self.cube.bottom.cubies[2][2], (Cube.RIGHT, Cube.BACK))]
+        for candidate, adjacent_sides in candidates_and_adjacent_sides:
+            if candidate != self.top_color:
+                continue
+            # get the sides that are currently adjacent to the candidate corner
+            leftish_adj_side = self.cube.get_side_by_name(adjacent_sides[0])
+            rightish_adj_side = self.cube.get_side_by_name(adjacent_sides[1])
+
+            # get the colors that are adjacent to the candidate corner
+            leftish_adj_color = leftish_adj_side.cubies[2][2]
+            rightish_adj_color = rightish_adj_side.cubies[2][0]
+
+            # get the sides that have the corner colors that match the candidate corner
+            leftish_color_side = self.cube.get_side_by_color(leftish_adj_color)
+            rightish_color_side = self.cube.get_side_by_color(rightish_adj_color)
+
+            # corner not at location of sides of same center colors
+            if {leftish_adj_side, rightish_adj_side} != {leftish_color_side, rightish_color_side}:
+                sides_to_manipulations = {(frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.FRONT, Cube.RIGHT})):
+                                              [self.cube.rotate_bottom_right],
+                                          (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.RIGHT, Cube.BACK})):
+                                              [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right],
+                                          (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.BACK, Cube.LEFT})):
+                                              [self.cube.rotate_bottom_left],
+                                          (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.RIGHT, Cube.BACK})):
+                                              [self.cube.rotate_bottom_right],
+                                          (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.BACK, Cube.LEFT})):
+                                              [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right],
+                                          (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.LEFT, Cube.FRONT})):
+                                              [self.cube.rotate_bottom_left],
+                                          (frozenset({Cube.RIGHT, Cube.BACK}), frozenset({Cube.BACK, Cube.LEFT})):
+                                              [self.cube.rotate_bottom_right],
+                                          (frozenset({Cube.RIGHT, Cube.BACK}), frozenset({Cube.LEFT, Cube.FRONT})):
+                                              [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right],
+                                          (frozenset({Cube.RIGHT, Cube.BACK}), frozenset({Cube.FRONT, Cube.RIGHT})):
+                                              [self.cube.rotate_bottom_left],
+                                          (frozenset({Cube.BACK, Cube.LEFT}), frozenset({Cube.LEFT, Cube.FRONT})):
+                                              [self.cube.rotate_bottom_right],
+                                          (frozenset({Cube.BACK, Cube.LEFT}), frozenset({Cube.FRONT, Cube.RIGHT})):
+                                              [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right],
+                                          (frozenset({Cube.BACK, Cube.LEFT}), frozenset({Cube.RIGHT, Cube.BACK})):
+                                              [self.cube.rotate_bottom_left],
+                                          }
+                key = (frozenset({self.cube.get_side_name(leftish_adj_side),
+                                  self.cube.get_side_name(rightish_adj_side)}),
+                       frozenset({self.cube.get_side_name(leftish_color_side),
+                                  self.cube.get_side_name(rightish_color_side)}))
+
+                manipulations = sides_to_manipulations[key]
+                # rotate bottom so that corner is between two sides with relevant colors,
+                # and top_color part of corner remains on the bottom
+                for manipulation in manipulations:
+                    manipulation()
+        pass
 
 
 class TopCrossSolver(object):
