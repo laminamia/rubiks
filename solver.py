@@ -154,27 +154,53 @@ class TopSolver(object):
         return all(side.get_center_color() == side.cubies[0][0] and side.get_center_color() == side.cubies[0][2]
                    for side in [self.cube.front, self.cube.left, self.cube.right, self.cube.back])
 
+    # todo: refactor so that instead of doing side by side, we identify a candidate, and then solve that side
     def solve(self):
-        while self.solve_corners_on_bottom():
-            pass
+        while not self.is_done():
+            # todo find a more efficient way to find out where to solve
+            while self.solve_corners_on_bottom():
+                pass
+            while self.solve_corners_on_face_bottom_row():
+                pass
+            while self.solve_corners_on_face_top_row():
+                pass
+            while self.solve_corners_on_bottom():
+                pass
+            while self.solve_corners_on_face_bottom_row():
+                pass
+            while self.solve_corners_on_face_top_row():
+                pass
+            while self.solve_corners_on_top():
+                pass
+
+    def solve_corners_on_face_bottom_row(self):
+        found = False
+
+        # check front
         while self.solve_corners_on_front_bottom_row():
-            pass
+            found = True
+
+        # check right
         self.cube.rotate_cube_right()
         while self.solve_corners_on_front_bottom_row():
-            pass
+            found = True
+
+        # check back
         self.cube.rotate_cube_right()
         while self.solve_corners_on_front_bottom_row():
-            pass
+            found = True
+
+        # check left
         self.cube.rotate_cube_right()
         while self.solve_corners_on_front_bottom_row():
-            pass
+            found = True
+
+        # check front again
         self.cube.rotate_cube_right()
         while self.solve_corners_on_front_bottom_row():
-            pass
-        while self.solve_corners_on_bottom():
-            pass
-        while self.solve_corners_on_front_bottom_row():
-            pass
+            found = True
+
+        return found
 
     def solve_corners_on_front_bottom_row(self):
         candidates_and_adj_sides = [(self.cube.front.cubies[2][0], (Cube.LEFT, Cube.FRONT)),
@@ -214,9 +240,8 @@ class TopSolver(object):
                                           [self.cube.rotate_bottom_left, self.cube.rotate_cube_right]}
                 # move corner to be below destination and turn cube so that corner top color is facing forward
                 key = (frozenset(adjacent_sides), frozenset({side_color_side_name, bottom_color_side_name}))
-                for manipulations in sides_to_manipulations[key]:
-                    for manipulation in manipulations:
-                        manipulation()
+                for manipulation in sides_to_manipulations[key]:
+                    manipulation()
 
             # now corner is positioned below destination, with top color facing forward
             if Cube.LEFT in adjacent_sides:
@@ -230,6 +255,104 @@ class TopSolver(object):
                 self.cube.rotate_bottom_right()
                 self.cube.rotate_right_backward()
             return True
+        return False
+
+    # todo: consider refactor given common code between
+    # todo: this and the solve_corners_on_front_bottom_row
+    def solve_corners_on_face_top_row(self):
+        found = False
+
+        # check front
+        while self.solve_corners_on_front_top_row():
+            found = True
+
+        # check right
+        self.cube.rotate_cube_right()
+        while self.solve_corners_on_front_top_row():
+            found = True
+
+        # check back
+        self.cube.rotate_cube_right()
+        while self.solve_corners_on_front_top_row():
+            found = True
+
+        # check left
+        self.cube.rotate_cube_right()
+        while self.solve_corners_on_front_top_row():
+            found = True
+
+        # check front again
+        self.cube.rotate_cube_right()
+        while self.solve_corners_on_front_top_row():
+            found = True
+
+        return found
+
+    def solve_corners_on_front_top_row(self):
+        candidates_and_adj_sides = [(self.cube.front.cubies[0][0], (Cube.LEFT, Cube.FRONT)),
+                                    (self.cube.front.cubies[0][2], (Cube.FRONT, Cube.RIGHT))]
+
+        for candidate, adjacent_sides in candidates_and_adj_sides:
+            if candidate != self.top_color:
+                continue
+
+            adjacent_side_color = None
+            adjacent_top_color = None
+            if Cube.LEFT in adjacent_sides:
+                adjacent_side_color = self.cube.left.cubies[0][2]
+                adjacent_top_color = self.cube.top.cubies[2][0]
+            if Cube.RIGHT in adjacent_sides:
+                adjacent_side_color = self.cube.right.cubies[0][0]
+                adjacent_top_color = self.cube.top.cubies[2][2]
+
+            side_color_side_name = self.cube.get_color_location(adjacent_side_color)
+            top_color_side_name = self.cube.get_color_location(adjacent_top_color)
+
+            sides_to_manipulations = {(frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.LEFT, Cube.FRONT})):
+                                      [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                       self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                       self.cube.rotate_bottom_right, self.cube.rotate_left_forward,
+                                       self.cube.rotate_bottom_left, self.cube.rotate_left_backward],
+                                      (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.FRONT, Cube.RIGHT})):
+                                      [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                       self.cube.rotate_front_cw, self.cube.rotate_bottom_left,
+                                       self.cube.rotate_front_cw, self.cube.rotate_bottom_left,
+                                       self.cube.rotate_front_ccw],
+                                      (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.RIGHT, Cube.BACK})):
+                                      [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                       self.cube.rotate_front_cw, self.cube.rotate_right_backward,
+                                       self.cube.rotate_bottom_left, self.cube.rotate_right_forward],
+                                      (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.BACK, Cube.LEFT})):
+                                      [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                       self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                       self.cube.rotate_back_left, self.cube.rotate_bottom_left,
+                                       self.cube.rotate_back_right],
+                                      (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.FRONT, Cube.RIGHT})):
+                                      [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                       self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                       self.cube.rotate_bottom_left, self.cube.rotate_right_forward,
+                                       self.cube.rotate_bottom_right, self.cube.rotate_right_backward],
+                                      (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.RIGHT, Cube.BACK})):
+                                      [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                       self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                       self.cube.rotate_back_right, self.cube.rotate_bottom_right,
+                                       self.cube.rotate_back_left],
+                                      (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.BACK, Cube.LEFT})):
+                                      [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                       self.cube.rotate_front_ccw, self.cube.rotate_left_backward,
+                                       self.cube.rotate_bottom_right, self.cube.rotate_left_forward],
+                                      (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.LEFT, Cube.FRONT})):
+                                      [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                       self.cube.rotate_front_ccw, self.cube.rotate_bottom_right,
+                                       self.cube.rotate_front_ccw, self.cube.rotate_bottom_right,
+                                       self.cube.rotate_front_cw]}
+
+            # corner to top location
+            key = (frozenset(adjacent_sides), frozenset({side_color_side_name, top_color_side_name}))
+            for manipulation in sides_to_manipulations[key]:
+                manipulation()
+            return True
+
         return False
 
     def solve_corners_on_bottom(self):
@@ -327,6 +450,72 @@ class TopSolver(object):
             # skip checking remaining candidates as they
             # may have moved; return found = True
             return True
+
+        return False
+
+    def solve_corners_on_top(self):
+        candidates_and_adjacent_sides = [(self.cube.top.cubies[0][0], (Cube.LEFT, Cube.BACK)),
+                                         (self.cube.top.cubies[0][2], (Cube.BACK, Cube.RIGHT)),
+                                         (self.cube.top.cubies[2][0], (Cube.FRONT, Cube.LEFT)),
+                                         (self.cube.top.cubies[2][2], (Cube.RIGHT, Cube.FRONT))]
+        for candidate, adjacent_sides in candidates_and_adjacent_sides:
+            if candidate != self.top_color:
+                continue
+
+            # get the sides that are currently adjacent to the candidate corner
+            rightish_side_name = adjacent_sides[0]
+            leftish_side_name = adjacent_sides[1]
+
+            rightish_side = self.cube.get_side_by_name(rightish_side_name)
+            leftish_side = self.cube.get_side_by_name(leftish_side_name)
+
+            # get the colors that are adjacent to the candidate corner
+            leftish_adj_color = rightish_side.cubies[0][0]
+            rightish_adj_color = leftish_side.cubies[0][2]
+
+            # get the sides that have the corner colors that match the candidate corner
+            leftish_color_side = self.cube.get_side_by_color(leftish_adj_color)
+            rightish_color_side = self.cube.get_side_by_color(rightish_adj_color)
+
+            # get the destination names of the rightish_color and leftish_color sides
+            # so that we know the name of the side where the corner cube is to be moved
+            leftish_color_side_name = self.cube.get_side_name(leftish_color_side)
+            rightish_color_side_name = self.cube.get_side_name(rightish_color_side)
+
+            # corner already at correct location
+            if {rightish_side_name, leftish_side_name} == {leftish_color_side_name, rightish_color_side_name}:
+                # check next candidate
+                continue
+
+            # turn cube so that candidate is in front, top, left
+            sides_to_manipulations = {frozenset({Cube.LEFT, Cube.FRONT}):
+                                          [],
+                                      frozenset({Cube.FRONT, Cube.RIGHT}):
+                                          [self.cube.rotate_cube_left],
+                                      frozenset({Cube.RIGHT, Cube.BACK}):
+                                          [self.cube.rotate_cube_left, self.cube.rotate_cube_left],
+                                      frozenset({Cube.BACK, Cube.LEFT}):
+                                          [self.cube.rotate_bottom_left]}
+
+            key = frozenset({rightish_side_name, leftish_side_name})
+
+            manipulations = sides_to_manipulations[key]
+
+            # rotate cube so that candidate is at front, top, left
+            for manipulation in manipulations:
+                manipulation()
+
+            # now move the candidate out of the top
+
+            self.cube.rotate_left_forward()
+            self.cube.rotate_bottom_right()
+            self.cube.rotate_left_backward()
+            self.cube.rotate_cube_left()
+
+            # leverage solve_corners_on_face_bottom_row
+            # now that we have this candidate moved there
+            # and in the front
+            return self.solve_corners_on_face_bottom_row()
 
         return False
 

@@ -462,6 +462,22 @@ class TestTopSolver(unittest.TestCase):
         # todo develop native test rather than relying on stage evaluator
         self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, StageEvaluator(cube).determine_stage())
 
+    def test_solve_2(self):
+        cube = Parser().parse_string_to_cube("    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "BRO GBG ROB OGR\n" +
+                                             "BRB RBY ROG YGY\n" +
+                                             "RGY BYR BOG YBG\n" +
+                                             "    OOY\n" +
+                                             "    RYG\n" +
+                                             "    YOO")
+        solver = TopSolver(cube, WHITE)
+        solver.solve()
+        print(cube)
+        # todo develop native test rather than relying on stage evaluator
+        self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, StageEvaluator(cube).determine_stage())
+
 
 if __name__ == '__main__':
     # logging.getLogger().setLevel(logging.DEBUG)
