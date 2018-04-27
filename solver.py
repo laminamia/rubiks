@@ -144,34 +144,60 @@ class TopSolver(object):
         assert self.sub_solver.is_done(), "Top cross not solved"
 
     def is_done(self):
+        return self.count_completed_corners() == 4
+
+    def count_completed_corners(self):
         self.cube.move_side_to_top(self.top_color)
-        top = self.cube.top
-        top_corners_complete = all(top.get_center_color() == color for color in
-                                   [top.cubies[0][0], top.cubies[0][2], top.cubies[2][0], top.cubies[2][2]])
-        if not top_corners_complete:
-            return False
 
-        return all(side.get_center_color() == side.cubies[0][0] and side.get_center_color() == side.cubies[0][2]
-                   for side in [self.cube.front, self.cube.left, self.cube.right, self.cube.back])
+        return sum(self.top_color == top_corner and adj1 == adj1_center and adj2 == adj2_center
+                   for top_corner, adj1, adj1_center, adj2, adj2_center in
+                   [(self.cube.top.cubies[0][0],
+                     self.cube.back.cubies[0][2], self.cube.back.get_center_color(),
+                     self.cube.left.cubies[0][0], self.cube.left.get_center_color()),
+                    (self.cube.top.cubies[0][2],
+                     self.cube.back.cubies[0][0], self.cube.back.get_center_color(),
+                     self.cube.right.cubies[0][2], self.cube.right.get_center_color()),
+                    (self.cube.top.cubies[2][0],
+                     self.cube.front.cubies[0][0], self.cube.front.get_center_color(),
+                     self.cube.left.cubies[0][2], self.cube.left.get_center_color()),
+                    (self.cube.top.cubies[2][2],
+                     self.cube.front.cubies[0][2], self.cube.front.get_center_color(),
+                     self.cube.right.cubies[0][0], self.cube.right.get_center_color())])
 
-    # todo: refactor so that instead of doing side by side, we identify a candidate, and then solve that side
     def solve(self):
-        while not self.is_done():
-            # todo find a more efficient way to find out where to solve
+        done = self.count_completed_corners()
+        if done == 4:
+            return
+
+        # check if any top color corners on bottom and if so, solve
+        if any(color == self.top_color for color in
+               [self.cube.bottom.cubies[0][0], self.cube.bottom.cubies[0][2],
+                self.cube.bottom.cubies[2][0], self.cube.bottom.cubies[2][2]]):
             while self.solve_corners_on_bottom():
-                pass
-            while self.solve_corners_on_face_bottom_row():
-                pass
-            while self.solve_corners_on_face_top_row():
-                pass
-            while self.solve_corners_on_bottom():
-                pass
-            while self.solve_corners_on_face_bottom_row():
-                pass
-            while self.solve_corners_on_face_top_row():
-                pass
+                done += 1
+
+        for x in range(0, 4):
+            if self.cube.front.cubies[0][0] == self.top_color or self.cube.front.cubies[0][2] == self.top_color:
+                while self.solve_corners_on_front_top_row():
+                    done += 1
+
+            if self.cube.front.cubies[2][0] == self.top_color or self.cube.front.cubies[2][2] == self.top_color:
+                while self.solve_corners_on_front_bottom_row():
+                    done += 1
+
+            if done == 4:
+                break
+
+            # check next side
+            self.cube.rotate_cube_right()
+
+        if done < 4:
             while self.solve_corners_on_top():
-                pass
+                done += 1
+
+        # run it again!
+        if done < 4:
+            self.solve()
 
     def solve_corners_on_face_bottom_row(self):
         found = False
@@ -225,19 +251,19 @@ class TopSolver(object):
             # corner not at location of adjacent colors
             if set(adjacent_sides) != {side_color_side_name, bottom_color_side_name}:
                 sides_to_manipulations = {(frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.FRONT, Cube.RIGHT})):
-                                          [self.cube.rotate_bottom_right, self.cube.rotate_cube_left],
+                                              [self.cube.rotate_bottom_right, self.cube.rotate_cube_left],
                                           (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.RIGHT, Cube.BACK})):
-                                          [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right,
-                                           self.cube.rotate_cube_right, self.cube.rotate_cube_right],
+                                              [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right,
+                                               self.cube.rotate_cube_right, self.cube.rotate_cube_right],
                                           (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.BACK, Cube.LEFT})):
-                                          [self.cube.rotate_bottom_left, self.cube.rotate_cube_right],
+                                              [self.cube.rotate_bottom_left, self.cube.rotate_cube_right],
                                           (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.RIGHT, Cube.BACK})):
-                                          [self.cube.rotate_bottom_right, self.cube.rotate_cube_left],
+                                              [self.cube.rotate_bottom_right, self.cube.rotate_cube_left],
                                           (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.BACK, Cube.LEFT})):
-                                          [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right,
-                                           self.cube.rotate_cube_right, self.cube.rotate_cube_right],
+                                              [self.cube.rotate_bottom_right, self.cube.rotate_bottom_right,
+                                               self.cube.rotate_cube_right, self.cube.rotate_cube_right],
                                           (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.LEFT, Cube.FRONT})):
-                                          [self.cube.rotate_bottom_left, self.cube.rotate_cube_right]}
+                                              [self.cube.rotate_bottom_left, self.cube.rotate_cube_right]}
                 # move corner to be below destination and turn cube so that corner top color is facing forward
                 key = (frozenset(adjacent_sides), frozenset({side_color_side_name, bottom_color_side_name}))
                 for manipulation in sides_to_manipulations[key]:
@@ -309,43 +335,43 @@ class TopSolver(object):
             top_color_side_name = self.cube.get_color_location(adjacent_top_color)
 
             sides_to_manipulations = {(frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.LEFT, Cube.FRONT})):
-                                      [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
-                                       self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
-                                       self.cube.rotate_bottom_right, self.cube.rotate_left_forward,
-                                       self.cube.rotate_bottom_left, self.cube.rotate_left_backward],
+                                          [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                           self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                           self.cube.rotate_bottom_right, self.cube.rotate_left_forward,
+                                           self.cube.rotate_bottom_left, self.cube.rotate_left_backward],
                                       (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.FRONT, Cube.RIGHT})):
-                                      [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
-                                       self.cube.rotate_front_cw, self.cube.rotate_bottom_left,
-                                       self.cube.rotate_front_cw, self.cube.rotate_bottom_left,
-                                       self.cube.rotate_front_ccw],
+                                          [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                           self.cube.rotate_front_cw, self.cube.rotate_bottom_left,
+                                           self.cube.rotate_front_cw, self.cube.rotate_bottom_left,
+                                           self.cube.rotate_front_ccw],
                                       (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.RIGHT, Cube.BACK})):
-                                      [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
-                                       self.cube.rotate_front_cw, self.cube.rotate_right_backward,
-                                       self.cube.rotate_bottom_left, self.cube.rotate_right_forward],
+                                          [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                           self.cube.rotate_front_cw, self.cube.rotate_right_backward,
+                                           self.cube.rotate_bottom_left, self.cube.rotate_right_forward],
                                       (frozenset({Cube.LEFT, Cube.FRONT}), frozenset({Cube.BACK, Cube.LEFT})):
-                                      [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
-                                       self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
-                                       self.cube.rotate_back_left, self.cube.rotate_bottom_left,
-                                       self.cube.rotate_back_right],
+                                          [self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                           self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                           self.cube.rotate_back_left, self.cube.rotate_bottom_left,
+                                           self.cube.rotate_back_right],
                                       (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.FRONT, Cube.RIGHT})):
-                                      [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
-                                       self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
-                                       self.cube.rotate_bottom_left, self.cube.rotate_right_forward,
-                                       self.cube.rotate_bottom_right, self.cube.rotate_right_backward],
+                                          [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                           self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                           self.cube.rotate_bottom_left, self.cube.rotate_right_forward,
+                                           self.cube.rotate_bottom_right, self.cube.rotate_right_backward],
                                       (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.RIGHT, Cube.BACK})):
-                                      [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
-                                       self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
-                                       self.cube.rotate_back_right, self.cube.rotate_bottom_right,
-                                       self.cube.rotate_back_left],
+                                          [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                           self.cube.rotate_front_ccw, self.cube.rotate_bottom_left,
+                                           self.cube.rotate_back_right, self.cube.rotate_bottom_right,
+                                           self.cube.rotate_back_left],
                                       (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.BACK, Cube.LEFT})):
-                                      [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
-                                       self.cube.rotate_front_ccw, self.cube.rotate_left_backward,
-                                       self.cube.rotate_bottom_right, self.cube.rotate_left_forward],
+                                          [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                           self.cube.rotate_front_ccw, self.cube.rotate_left_backward,
+                                           self.cube.rotate_bottom_right, self.cube.rotate_left_forward],
                                       (frozenset({Cube.FRONT, Cube.RIGHT}), frozenset({Cube.LEFT, Cube.FRONT})):
-                                      [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
-                                       self.cube.rotate_front_ccw, self.cube.rotate_bottom_right,
-                                       self.cube.rotate_front_ccw, self.cube.rotate_bottom_right,
-                                       self.cube.rotate_front_cw]}
+                                          [self.cube.rotate_front_cw, self.cube.rotate_bottom_right,
+                                           self.cube.rotate_front_ccw, self.cube.rotate_bottom_right,
+                                           self.cube.rotate_front_ccw, self.cube.rotate_bottom_right,
+                                           self.cube.rotate_front_cw]}
 
             # corner to top location
             key = (frozenset(adjacent_sides), frozenset({side_color_side_name, top_color_side_name}))
@@ -495,7 +521,7 @@ class TopSolver(object):
                                       frozenset({Cube.RIGHT, Cube.BACK}):
                                           [self.cube.rotate_cube_left, self.cube.rotate_cube_left],
                                       frozenset({Cube.BACK, Cube.LEFT}):
-                                          [self.cube.rotate_bottom_left]}
+                                          [self.cube.rotate_cube_right]}
 
             key = frozenset({rightish_side_name, leftish_side_name})
 
@@ -515,7 +541,7 @@ class TopSolver(object):
             # leverage solve_corners_on_face_bottom_row
             # now that we have this candidate moved there
             # and in the front
-            return self.solve_corners_on_face_bottom_row()
+            return self.solve_corners_on_front_bottom_row()
 
         return False
 

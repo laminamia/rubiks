@@ -478,6 +478,45 @@ class TestTopSolver(unittest.TestCase):
         # todo develop native test rather than relying on stage evaluator
         self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, StageEvaluator(cube).determine_stage())
 
+    def test_count_complete_corners(self):
+        cube = Parser().parse_string_to_cube("    YWB\n" +
+                                             "    WWW\n" +
+                                             "    YWG\n" +
+                                             "BRG OBY ROR YGO\n" +
+                                             "ORR GBB YOY GGB\n" +
+                                             "ORR GOO BRB ROG\n" +
+                                             "    WYW\n" +
+                                             "    BYY\n" +
+                                             "    WGW")
+        solver = TopSolver(cube, WHITE)
+        self.assertEquals(0, solver.count_completed_corners())
+
+        cube = Parser().parse_string_to_cube("    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "ORR BBG ROB OGG\n" +
+                                             "BRB RBY ROG YGY\n" +
+                                             "RGY BYR BOG YBG\n" +
+                                             "    OOY\n" +
+                                             "    RYG\n" +
+                                             "    YOO")
+        solver = TopSolver(cube, WHITE)
+        self.assertEquals(1, solver.count_completed_corners())
+
+        cube = Parser().parse_string_to_cube("    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "BRO GBG ROB OGR\n" +
+                                             "BRB RBY ROG YGY\n" +
+                                             "RGY BYR BOG YBG\n" +
+                                             "    OOY\n" +
+                                             "    RYG\n" +
+                                             "    YOO")
+        solver = TopSolver(cube, WHITE)
+        solver.solve()
+        self.assertEquals(4, solver.count_completed_corners())
+
+
 
 if __name__ == '__main__':
     # logging.getLogger().setLevel(logging.DEBUG)
