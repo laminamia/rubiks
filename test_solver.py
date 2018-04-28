@@ -15,9 +15,9 @@ class TestStageEvaluator(unittest.TestCase):
 
         # rotations of a solved cube should not change its state
         self.assertTrue(evaluator.is_solved())
-        self.solved_cube.rotate_cube_right()
+        self.solved_cube.rotate_cube_ccw()
         self.assertTrue(evaluator.is_solved())
-        self.solved_cube.rotate_cube_left()
+        self.solved_cube.rotate_cube_cw()
         self.assertTrue(evaluator.is_solved())
         self.solved_cube.rotate_cube_forward(2)
         self.assertTrue(evaluator.is_solved())
@@ -44,7 +44,7 @@ class TestStageEvaluator(unittest.TestCase):
                                              "    RYR\n" +
                                              "    RRR\n" +
                                              "    RYO")
-        cube.rotate_cube_right(2)
+        cube.rotate_cube_ccw(2)
         evaluator = StageEvaluator(cube)
         self.assertFalse(evaluator.is_solved())
 
@@ -120,7 +120,7 @@ class TestStageEvaluator(unittest.TestCase):
                                              "    OBY\n" +
                                              "    GBB\n" +
                                              "    GOO")
-        cube.rotate_cube_right()
+        cube.rotate_cube_ccw()
         evaluator = StageEvaluator(cube)
         self.assertEqual(StageEvaluator.STAGE_TOP_CROSS_SOLVED,
                          evaluator.determine_stage())
@@ -201,7 +201,7 @@ class TestStageEvaluator(unittest.TestCase):
                                              "    RYR\n" +
                                              "    RRR\n" +
                                              "    RYO")
-        cube.rotate_cube_right(2)
+        cube.rotate_cube_ccw(2)
 
         evaluator = StageEvaluator(cube)
         stage = evaluator.determine_stage()
@@ -223,7 +223,7 @@ class TestStageEvaluator(unittest.TestCase):
                                              "    RYR\n" +
                                              "    RRR\n" +
                                              "    RYO")
-        cube.rotate_cube_right()
+        cube.rotate_cube_ccw()
 
         evaluator = StageEvaluator(cube)
         stage = evaluator.determine_stage()
@@ -245,7 +245,7 @@ class TestStageEvaluator(unittest.TestCase):
                                              "    RYR\n" +
                                              "    RRR\n" +
                                              "    RYO")
-        cube.rotate_cube_left()
+        cube.rotate_cube_cw()
 
         evaluator = StageEvaluator(cube)
         stage = evaluator.determine_stage()
@@ -267,7 +267,7 @@ class TestStageEvaluator(unittest.TestCase):
                                              "    RYR\n" +
                                              "    RRR\n" +
                                              "    RYO")
-        cube.rotate_cube_right()
+        cube.rotate_cube_ccw()
         cube.rotate_cube_forward()
 
         evaluator = StageEvaluator(cube)
@@ -290,7 +290,7 @@ class TestStageEvaluator(unittest.TestCase):
                                              "    RYR\n" +
                                              "    RRR\n" +
                                              "    RYO")
-        cube.rotate_cube_right()
+        cube.rotate_cube_ccw()
         cube.rotate_cube_backward()
 
         evaluator = StageEvaluator(cube)
@@ -430,7 +430,7 @@ class TestTopSolver(unittest.TestCase):
                                              "    BYR\n" +
                                              "    ROR")
         with self.assertRaises(AssertionError) as context:
-            TopSolver(cube)
+            TopCornerSolver(cube)
         self.assertTrue("Top cross not solved" in str(context.exception))
 
     def test_is_done(self):
@@ -443,7 +443,7 @@ class TestTopSolver(unittest.TestCase):
                                              "    RYR\n" +
                                              "    RRR\n" +
                                              "    RYO")
-        solver = TopSolver(cube, WHITE)
+        solver = TopCornerSolver(cube, WHITE)
         done = solver.is_done()
         self.assertTrue(done)
 
@@ -457,10 +457,14 @@ class TestTopSolver(unittest.TestCase):
                                              "    WYW\n" +
                                              "    BYY\n" +
                                              "    WGW")
-        solver = TopSolver(cube, WHITE)
+        solver = TopCornerSolver(cube, WHITE)
         solver.solve()
         # todo develop native test rather than relying on stage evaluator
-        self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, StageEvaluator(cube).determine_stage())
+        stage = StageEvaluator(cube).determine_stage()
+        if stage != StageEvaluator.STAGE_TOP_SOLVED:
+            print("\n", flush=True)
+            print(cube, flush=True)
+        self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, stage)
 
     def test_solve_2(self):
         cube = Parser().parse_string_to_cube("    WWW\n" +
@@ -472,7 +476,23 @@ class TestTopSolver(unittest.TestCase):
                                              "    OOY\n" +
                                              "    RYG\n" +
                                              "    YOO")
-        solver = TopSolver(cube, WHITE)
+        solver = TopCornerSolver(cube, WHITE)
+        solver.solve()
+        print(cube)
+        # todo develop native test rather than relying on stage evaluator
+        self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, StageEvaluator(cube).determine_stage())
+
+    def test_solve_3(self):
+        cube = Parser().parse_string_to_cube("    BWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "YGG RRR BBB OOR\n" +
+                                             "GGR BRG OBY ROY\n" +
+                                             "BOY YBG YOG OGY\n" +
+                                             "    GYO\n" +
+                                             "    BYY\n" +
+                                             "    ORW")
+        solver = TopCornerSolver(cube, WHITE)
         solver.solve()
         print(cube)
         # todo develop native test rather than relying on stage evaluator
@@ -488,7 +508,7 @@ class TestTopSolver(unittest.TestCase):
                                              "    WYW\n" +
                                              "    BYY\n" +
                                              "    WGW")
-        solver = TopSolver(cube, WHITE)
+        solver = TopCornerSolver(cube, WHITE)
         self.assertEquals(0, solver.count_completed_corners())
 
         cube = Parser().parse_string_to_cube("    WWW\n" +
@@ -500,7 +520,7 @@ class TestTopSolver(unittest.TestCase):
                                              "    OOY\n" +
                                              "    RYG\n" +
                                              "    YOO")
-        solver = TopSolver(cube, WHITE)
+        solver = TopCornerSolver(cube, WHITE)
         self.assertEquals(1, solver.count_completed_corners())
 
         cube = Parser().parse_string_to_cube("    WWW\n" +
@@ -512,10 +532,147 @@ class TestTopSolver(unittest.TestCase):
                                              "    OOY\n" +
                                              "    RYG\n" +
                                              "    YOO")
-        solver = TopSolver(cube, WHITE)
+        solver = TopCornerSolver(cube, WHITE)
         solver.solve()
         self.assertEquals(4, solver.count_completed_corners())
 
+    def test_find_candidate_1(self):
+        cube = Parser().parse_string_to_cube("    YWB\n" +
+                                             "    WWW\n" +
+                                             "    YWG\n" +
+                                             "BRG OBY ROR YGO\n" +
+                                             "ORR GBB YOY GGB\n" +
+                                             "ORR GOO BRB ROG\n" +
+                                             "    WYW\n" +
+                                             "    BYY\n" +
+                                             "    WGW")
+        solver = TopCornerSolver(cube, WHITE)
+        side_name, coords = solver.find_candidate()
+        # test that we got back a valid candidate, order independent
+        self.assertIn((side_name, coords), {(Cube.BOTTOM, (0, 0)),
+                                            (Cube.BOTTOM, (0, 2)),
+                                            (Cube.BOTTOM, (2, 0)),
+                                            (Cube.BOTTOM, (2, 2))})
+
+    def test_find_candidate_2(self):
+        cube = Parser().parse_string_to_cube("    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "BRO GBG ROB OGR\n" +
+                                             "BRB RBY ROG YGY\n" +
+                                             "RGY BYR BOG YBG\n" +
+                                             "    OOY\n" +
+                                             "    RYG\n" +
+                                             "    YOO")
+        solver = TopCornerSolver(cube, WHITE)
+        side_name, coords = solver.find_candidate()
+        # test that we got back a valid candidate, order independent
+        self.assertIn((side_name, coords), {(Cube.TOP, (0, 0)),
+                                            (Cube.TOP, (0, 2)),
+                                            (Cube.TOP, (2, 0)),
+                                            (Cube.TOP, (2, 2))})
+
+    def test_find_candidate_3(self):
+        cube = Parser().parse_string_to_cube("    YWY\n" +
+                                             "    WWW\n" +
+                                             "    YWR\n" +
+                                             "BRB RBW GOR GGO\n" +
+                                             "BRG RBO YOR BGY\n" +
+                                             "ORW BOO BOO WGY\n" +
+                                             "    RBW\n" +
+                                             "    YYG\n" +
+                                             "    GYG")
+        solver = TopCornerSolver(cube, WHITE)
+        side_name, coords = solver.find_candidate()
+        # test that we got back a valid candidate, order independent
+        self.assertIn((side_name, coords), {(Cube.LEFT, (2, 0)),
+                                            (Cube.FRONT, (0, 2)),
+                                            (Cube.BACK, (2, 0)),
+                                            (Cube.BOTTOM, (0, 2))})
+
+    def test_find_candidate_4(self):
+        cube = Parser().parse_string_to_cube("    WWG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "BBB OOO GGY RRR\n" +
+                                             "BBB OOR GGO GRY\n" +
+                                             "OBW RYR BYO GYB\n" +
+                                             "    GOY\n" +
+                                             "    RYG\n" +
+                                             "    YRY")
+        solver = TopCornerSolver(cube, WHITE)
+        side_name, coords = solver.find_candidate()
+        # test that we got back a valid candidate, order independent
+        self.assertIn((side_name, coords), {(Cube.LEFT, (2, 2))})
+        self.assertEquals(3, solver.count_completed_corners())
+
+    def test_find_candidate_excludes_solved_corners(self):
+        cube = Parser().parse_string_to_cube("    OGY\n" +
+                                             "    OOY\n" +
+                                             "    OOG\n" +
+                                             "WWW BGY RRO BRG\n" +
+                                             "WWW BBY GYO BGG\n" +
+                                             "WWW BOB YBG YBG\n" +
+                                             "    RYR\n" +
+                                             "    RRR\n" +
+                                             "    RYO")
+        solver = TopCornerSolver(cube, WHITE)
+        # should not return a candidate if all corners are done
+        side_name, coords = solver.find_candidate()
+        self.assertIsNone(side_name)
+        self.assertIsNone(coords)
+
+    def test_is_top_corner_solved(self):
+        cube = Parser().parse_string_to_cube("    OGY\n" +
+                                             "    OOY\n" +
+                                             "    OOG\n" +
+                                             "WWW BGY RRO BRG\n" +
+                                             "WWW BBY GYO BGG\n" +
+                                             "WWW BOB YBG YBG\n" +
+                                             "    RYR\n" +
+                                             "    RRR\n" +
+                                             "    RYO")
+        solver = TopCornerSolver(cube, WHITE)
+        # should be true if top corner is in correct position
+        self.assertTrue(solver.is_top_corner_solved((0, 0)))
+        self.assertTrue(solver.is_top_corner_solved((0, 2)))
+        self.assertTrue(solver.is_top_corner_solved((2, 0)))
+        self.assertTrue(solver.is_top_corner_solved((2, 2)))
+
+        cube = Parser().parse_string_to_cube("    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "BRO GBG ROB OGR\n" +
+                                             "BRB RBY ROG YGY\n" +
+                                             "RGY BYR BOG YBG\n" +
+                                             "    OOY\n" +
+                                             "    RYG\n" +
+                                             "    YOO")
+
+        solver = TopCornerSolver(cube, WHITE)
+        # should be true if top corner is in correct position
+        self.assertFalse(solver.is_top_corner_solved((0, 0)))
+        self.assertFalse(solver.is_top_corner_solved((0, 2)))
+        self.assertFalse(solver.is_top_corner_solved((2, 0)))
+        self.assertFalse(solver.is_top_corner_solved((2, 2)))
+
+        # should only consider solved if it is actually the top color
+        cube = Parser().parse_string_to_cube("    OGY\n" +
+                                             "    OOY\n" +
+                                             "    OOG\n" +
+                                             "WWB BGY RRO WRG\n" +
+                                             "WWW BBY GYO BGG\n" +
+                                             "WWW BOB YBG YBG\n" +
+                                             "    RYR\n" +
+                                             "    RRR\n" +
+                                             "    RYO")
+
+        solver = TopCornerSolver(cube, WHITE)
+        # should be true if top corner is in correct position
+        self.assertTrue(solver.is_top_corner_solved((0, 0)))
+        self.assertFalse(solver.is_top_corner_solved((0, 2)))
+        self.assertTrue(solver.is_top_corner_solved((2, 0)))
+        self.assertTrue(solver.is_top_corner_solved((2, 2)))
 
 
 if __name__ == '__main__':

@@ -430,7 +430,7 @@ class TestCube(unittest.TestCase):
 
         self.run_test_manipulation(self.cube.rotate_bottom_right, expected)
 
-    def test_rotate_cube_right(self):
+    def test_rotate_cube_ccw(self):
         expected = Cube(right=self.front, back=self.right, left=self.back, front=self.left,
                         top=Side([[GREEN, WHITE, WHITE],
                                   [ORANGE, WHITE, BLUE],
@@ -438,9 +438,9 @@ class TestCube(unittest.TestCase):
                         bottom=Side([[GREEN, RED, ORANGE],
                                      [BLUE, YELLOW, YELLOW],
                                      [YELLOW, RED, BLUE]]))
-        self.run_test_manipulation(self.cube.rotate_cube_right, expected)
+        self.run_test_manipulation(self.cube.rotate_cube_ccw, expected)
 
-    def test_rotate_cube_left(self):
+    def test_rotate_cube_cw(self):
         expected = Cube(left=self.front, back=self.left, right=self.back, front=self.right,
                         top=Side([[BLUE, ORANGE, YELLOW],
                                   [BLUE, WHITE, ORANGE],
@@ -449,7 +449,7 @@ class TestCube(unittest.TestCase):
                                      [YELLOW, YELLOW, BLUE],
                                      [ORANGE, RED, GREEN]]))
 
-        self.run_test_manipulation(self.cube.rotate_cube_left, expected)
+        self.run_test_manipulation(self.cube.rotate_cube_cw, expected)
 
     def test_rotate_cube_forward(self):
         expected = Cube(front=self.top,
@@ -548,6 +548,14 @@ class TestSide(unittest.TestCase):
                          [BLUE, BLUE, RED],
                          [RED, WHITE, YELLOW]])
         self.assertEqual(expected, s1.create_inverse())
+
+    def test_get_color_by_coords(self):
+        side = Side([[YELLOW, WHITE, RED],
+                     [RED, BLUE, BLUE],
+                     [GREEN, GREEN, WHITE]])
+        self.assertEqual(YELLOW, side.get_color_by_coords((0, 0)))
+        self.assertEqual(BLUE, side.get_color_by_coords((1, 1)))
+        self.assertEqual(WHITE, side.get_color_by_coords((2, 2)))
 
     def test_get_row(self):
         rows = [[YELLOW, WHITE, RED],

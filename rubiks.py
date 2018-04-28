@@ -49,7 +49,7 @@ class Cube(object):
     LEFT = "left"
     RIGHT = "right"
     BOTTOM = "bottom"
-    SIDE_NAMES = [FRONT, BACK, LEFT, RIGHT, BOTTOM, TOP]
+    SIDE_NAMES = {FRONT, BACK, LEFT, RIGHT, BOTTOM, TOP}
 
     @staticmethod
     def create_solved_cube():
@@ -120,8 +120,8 @@ class Cube(object):
                 Cube.BOTTOM: [self.rotate_cube_forward, self.rotate_cube_forward],
                 Cube.FRONT: [self.rotate_cube_backward],
                 Cube.BACK: [self.rotate_cube_forward],
-                Cube.LEFT: [self.rotate_cube_right, self.rotate_cube_backward],
-                Cube.RIGHT: [self.rotate_cube_left, self.rotate_cube_backward]
+                Cube.LEFT: [self.rotate_cube_ccw, self.rotate_cube_backward],
+                Cube.RIGHT: [self.rotate_cube_cw, self.rotate_cube_backward]
             }[side_name]
         for manipulation in manipulations:
             if manipulation is not None:
@@ -134,8 +134,8 @@ class Cube(object):
                 Cube.BOTTOM: [self.rotate_cube_forward, self.rotate_cube_forward],
                 Cube.FRONT: [self.rotate_cube_forward],
                 Cube.BACK: [self.rotate_cube_backward],
-                Cube.LEFT: [self.rotate_cube_forward, self.rotate_cube_left],
-                Cube.RIGHT: [self.rotate_cube_forward, self.rotate_cube_right]
+                Cube.LEFT: [self.rotate_cube_forward, self.rotate_cube_cw],
+                Cube.RIGHT: [self.rotate_cube_forward, self.rotate_cube_ccw]
             }[side_name]
         for manipulation in manipulations:
             if manipulation is not None:
@@ -164,7 +164,7 @@ class Cube(object):
             self.right.rotate_face_colors_ccw()
         return self
 
-    def rotate_cube_right(self, num_times=1):
+    def rotate_cube_ccw(self, num_times=1):
         for i in range(num_times % 4):
             _temp = self.front
             self.front = self.left
@@ -175,10 +175,10 @@ class Cube(object):
             self.bottom.rotate_face_colors_cw()
         return self
 
-    def rotate_cube_left(self, num_times=1):
+    def rotate_cube_cw(self, num_times=1):
         n = num_times % 4
         if n == 0: return
-        self.rotate_cube_right(4 - n)
+        self.rotate_cube_ccw(4 - n)
         return self
 
     def rotate_front_cw(self):
@@ -272,30 +272,30 @@ class Cube(object):
 
     # less efficient but can implement natively later
     def rotate_left_forward(self):
-        self.rotate_cube_right()
+        self.rotate_cube_ccw()
         self.rotate_front_cw()
-        self.rotate_cube_left()
+        self.rotate_cube_cw()
         return self
 
     # less efficient but can implement natively later
     def rotate_left_backward(self):
-        self.rotate_cube_right()
+        self.rotate_cube_ccw()
         self.rotate_front_ccw()
-        self.rotate_cube_left()
+        self.rotate_cube_cw()
         return self
 
     # less efficient but can implement natively later
     def rotate_right_forward(self):
-        self.rotate_cube_left()
+        self.rotate_cube_cw()
         self.rotate_front_ccw()
-        self.rotate_cube_right()
+        self.rotate_cube_ccw()
         return self
 
     # less efficient but can implement natively later
     def rotate_right_backward(self):
-        self.rotate_cube_left()
+        self.rotate_cube_cw()
         self.rotate_front_cw()
-        self.rotate_cube_right()
+        self.rotate_cube_ccw()
         return self
 
     # less efficient but can implement natively later
@@ -314,9 +314,9 @@ class Cube(object):
 
     # less efficient but can implement natively later
     def rotate_right_backward(self):
-        self.rotate_cube_left()
+        self.rotate_cube_cw()
         self.rotate_front_cw()
-        self.rotate_cube_right()
+        self.rotate_cube_ccw()
         return self
 
     # todo: test
@@ -383,6 +383,9 @@ class Side(object):
 
     def get_center_color(self):
         return self.cubies[1][1]
+
+    def get_color_by_coords(self, coords):
+        return self.cubies[coords[0]][coords[1]]
 
     def get_row(self, row_idx):
         return self.cubies[row_idx]
