@@ -99,9 +99,9 @@ class Cube(object):
         return self.get_side_mapped_by_name()[side_name]
 
     def get_side_by_color(self, center_color):
-        return self.get_side_by_name(self.get_color_location(center_color))
+        return self.get_side_by_name(self.get_side_name_by_color(center_color))
 
-    def get_color_location(self, center_color):
+    def get_side_name_by_color(self, center_color):
         for side, location in {self.front: Cube.FRONT, self.back: Cube.BACK, self.top: Cube.TOP,
                                self.bottom: Cube.BOTTOM, self.left: Cube.LEFT, self.right: Cube.RIGHT}.items():
             if side.get_center_color() == center_color:
@@ -114,9 +114,9 @@ class Cube(object):
         return side_to_name[side]
 
     def move_side_to_top(self, color):
-        side_name = self.get_color_location(color)
+        side_name = self.get_side_name_by_color(color)
+        if side_name == Cube.TOP: return
         manipulations = {
-                Cube.TOP: [],
                 Cube.BOTTOM: [self.rotate_cube_forward, self.rotate_cube_forward],
                 Cube.FRONT: [self.rotate_cube_backward],
                 Cube.BACK: [self.rotate_cube_forward],

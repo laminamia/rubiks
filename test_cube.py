@@ -147,12 +147,12 @@ class TestCube(unittest.TestCase):
         self.assertEqual(6, len(sides))
 
     def test_get_color_side(self):
-        self.assertEqual(Cube.FRONT, self.cube.get_color_location(BLUE))
-        self.assertEqual(Cube.BACK, self.cube.get_color_location(GREEN))
-        self.assertEqual(Cube.LEFT, self.cube.get_color_location(RED))
-        self.assertEqual(Cube.RIGHT, self.cube.get_color_location(ORANGE))
-        self.assertEqual(Cube.TOP, self.cube.get_color_location(WHITE))
-        self.assertEqual(Cube.BOTTOM, self.cube.get_color_location(YELLOW))
+        self.assertEqual(Cube.FRONT, self.cube.get_side_name_by_color(BLUE))
+        self.assertEqual(Cube.BACK, self.cube.get_side_name_by_color(GREEN))
+        self.assertEqual(Cube.LEFT, self.cube.get_side_name_by_color(RED))
+        self.assertEqual(Cube.RIGHT, self.cube.get_side_name_by_color(ORANGE))
+        self.assertEqual(Cube.TOP, self.cube.get_side_name_by_color(WHITE))
+        self.assertEqual(Cube.BOTTOM, self.cube.get_side_name_by_color(YELLOW))
 
     def test_move_side_to_top(self):
         self.cube.move_side_to_top(GREEN)

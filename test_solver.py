@@ -305,6 +305,31 @@ class TestStageEvaluator(unittest.TestCase):
 
 class TestTopCrossSolver(unittest.TestCase):
 
+    def test_count_completed(self):
+        cube = Parser().parse_string_to_cube("    YWB\n" +
+                                             "    WWW\n" +
+                                             "    YWG\n" +
+                                             "BRG OBY ROR YGO\n" +
+                                             "ORR GBB YOY GGB\n" +
+                                             "ORR GOO BRB ROG\n" +
+                                             "    WYW\n" +
+                                             "    BYY\n" +
+                                             "    WGW")
+        solver = TopCrossSolver(cube)
+        self.assertEquals(4, solver.count_completed())
+
+        cube = Parser().parse_string_to_cube("    BGY\n" +
+                                             "    RWG\n" +
+                                             "    RYO\n" +
+                                             "YBB WBG WOG OWR\n" +
+                                             "WRR GBY GOW RGO\n" +
+                                             "YBY BYG WYW OOR\n" +
+                                             "    OOR\n" +
+                                             "    WYR\n" +
+                                             "    GBB")
+        solver = TopCrossSolver(cube)
+        self.assertEqual(0, solver.count_completed())
+
     def test_is_done(self):
         cube = Parser().parse_string_to_cube("    YWB\n" +
                                              "    WWW\n" +
@@ -319,6 +344,61 @@ class TestTopCrossSolver(unittest.TestCase):
         self.assertTrue(solver.is_done())
         cube.rotate_cube_forward()
         self.assertTrue(solver.is_done())
+
+    def test_find_candidate_1(self):
+        cube = Parser().parse_string_to_cube("    BGY\n" +
+                                             "    RWG\n" +
+                                             "    RYO\n" +
+                                             "YBB WBG WOG OWR\n" +
+                                             "WRR GBY GOW RGO\n" +
+                                             "YBY BYG WYW OOR\n" +
+                                             "    OOR\n" +
+                                             "    WYR\n" +
+                                             "    GBB")
+        solver = TopCrossSolver(cube)
+        side_name, coordinates = solver.find_candidate()
+        self.assertIn((side_name, coordinates),
+                      {(Cube.LEFT, (1, 0)),
+                       (Cube.RIGHT, (1, 2)),
+                       (Cube.BACK, (0, 1)),
+                       (Cube.BOTTOM, (1, 0))})
+
+    def test_is_top_candidate_solved(self):
+        cube = Parser().parse_string_to_cube("    RWY\n" +
+                                             "    WWW\n" +
+                                             "    WWB\n" +
+                                             "YGO GBW RRO BOG\n" +
+                                             "BRB OBG YOB YGR\n" +
+                                             "ROY ORR BGW OOW\n" +
+                                             "    GYY\n" +
+                                             "    YYR\n" +
+                                             "    GGB")
+        solver = TopCrossSolver(cube)
+
+        self.assertEquals(1, solver.count_completed())
+
+        self.assertFalse(solver.is_top_candidate_solved((0, 1)))
+        self.assertFalse(solver.is_top_candidate_solved((1, 0)))
+        self.assertFalse(solver.is_top_candidate_solved((1, 2)))
+        self.assertTrue(solver.is_top_candidate_solved((2, 1)))
+
+    def test_find_candidate_2(self):
+        cube = Parser().parse_string_to_cube("    WWG\n" +
+                                             "    BWO\n" +
+                                             "    OOW\n" +
+                                             "OYB YGG RWW OBB\n" +
+                                             "YRB RBR WOG RGR\n" +
+                                             "GBR WWY OYB YOY\n" +
+                                             "    BGG\n" +
+                                             "    OYG\n" +
+                                             "    RYR")
+        solver = TopCrossSolver(cube)
+        side_name, coordinates = solver.find_candidate()
+        self.assertIn((side_name, coordinates),
+                      {(Cube.FRONT, (2, 1)),
+                       (Cube.RIGHT, (0, 1)),
+                       (Cube.TOP, (0, 1)),
+                       (Cube.RIGHT, (1, 0))})
 
     def test_solve_top_cross_1(self):
         cube = Parser().parse_string_to_cube("    BGY\n" +
@@ -352,6 +432,10 @@ class TestTopCrossSolver(unittest.TestCase):
         # print(evaluator.cube)
         self.assertTrue(top_cross_complete)
 
+        self.assertTrue(top_cross_solver.is_done())
+        self.assertEquals((None, None), top_cross_solver.find_candidate())
+        self.assertEquals(4, top_cross_solver.count_completed())
+
     def test_solve_top_cross_2(self):
         cube = Parser().parse_string_to_cube("    WWG\n" +
                                              "    BWO\n" +
@@ -384,6 +468,10 @@ class TestTopCrossSolver(unittest.TestCase):
         # print(evaluator.cube)
         self.assertTrue(top_cross_complete)
 
+        self.assertTrue(top_cross_solver.is_done())
+        self.assertEquals((None, None), top_cross_solver.find_candidate())
+        self.assertEquals(4, top_cross_solver.count_completed())
+
     def test_solve_top_cross_3(self):
         cube = Parser().parse_string_to_cube("    RWY\n" +
                                              "    WWW\n" +
@@ -415,6 +503,10 @@ class TestTopCrossSolver(unittest.TestCase):
         # print("Cube after solve stage 1:")
         # print(evaluator.cube)
         self.assertTrue(top_cross_complete)
+
+        self.assertTrue(top_cross_solver.is_done())
+        self.assertEquals((None, None), top_cross_solver.find_candidate())
+        self.assertEquals(4, top_cross_solver.count_completed())
 
 
 class TestTopSolver(unittest.TestCase):
