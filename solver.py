@@ -24,116 +24,6 @@ class Solver(object):
         self.stage = StageEvaluator(self.cube).determine_stage()
 
 
-class StageEvaluator(object):
-    STAGE_0 = 0
-    STAGE_TOP_CROSS_SOLVED = 1
-    STAGE_TOP_SOLVED = 2
-    STAGE_SOLVED = 100
-    STAGES = [STAGE_0, STAGE_TOP_CROSS_SOLVED, STAGE_SOLVED]
-
-    def __init__(self, cube):
-        self.cube = cube
-        self.stage = self.STAGE_0
-
-    def determine_stage(self):
-        self.stage = self.__determine_stage()
-        return self.stage
-
-    def is_solved(self):
-        solved = True
-        for side in self.cube.get_sides():
-            colors = [c for row in side.cubies for c in row]
-            solved = solved and all(side.get_center_color() == color for color in colors)
-        return solved
-
-    def __determine_stage(self):
-        if self.is_solved():
-            return StageEvaluator.STAGE_SOLVED
-
-        if not self.__is_top_cross_solved():
-            return StageEvaluator.STAGE_0
-
-        if not self.__is_top_solved():
-            return StageEvaluator.STAGE_TOP_CROSS_SOLVED
-
-        return StageEvaluator.STAGE_TOP_SOLVED
-
-    def __is_top_cross_solved(self):
-        # reset any stage candidates
-        self.top_cross_candidates = []
-
-        # identify any faces that are candidates for having state_1 complete
-        sides = self.cube.get_sides()
-        candidates = []
-        for side in sides:
-            side_name = self.cube.get_side_name(side)
-            logging.getLogger().debug("Checking %s to see if it has stage_1_part_1 solved", side_name)
-            center_color = side.cubies[1][1]
-            top_piece = side.cubies[0][1]
-            right_piece = side.cubies[1][2]
-            bottom_piece = side.cubies[2][1]
-            left_piece = side.cubies[1][0]
-            match = all(center_color == piece for piece in
-                        [top_piece, right_piece, bottom_piece, left_piece])
-            if match:
-                candidates.append(side)
-                logging.getLogger().debug("Side %s stage_1_part_1 solved", side_name)
-            else:
-                logging.getLogger().debug("Side %s stage_1_part_1 NOT solved", side_name)
-
-        if len(candidates) == 0:
-            return False
-
-        for candidate_side in candidates:
-            color = candidate_side.get_center_color()
-            side_name = self.cube.get_side_name_by_color(color)
-
-            logging.getLogger().debug("Checking %s to see if it has stage_top_cross_solved is solved", side_name)
-
-            self.cube.move_side_to_top(color)
-
-            found = all(side.cubies[1][1] == side.cubies[0][1] for side in
-                        [self.cube.back, self.cube.left, self.cube.front, self.cube.right])
-            logging.getLogger().debug("Side %s stage_1_part_2 %s", side_name, "solved" if found else "unsolved")
-            self.cube.move_top_to_side(side_name)
-
-            if found:
-                self.top_cross_candidates.append(side_name)
-
-        return len(self.top_cross_candidates) > 0
-
-    def __is_top_solved(self):
-        if len(self.top_cross_candidates) == 0:
-            return False
-
-        # reset any stage candidates
-        self.top_solved_candidates = []
-
-        for side_name in self.top_cross_candidates:
-            candidate_side = self.cube.get_side_by_name(side_name)
-            center_color = candidate_side.get_center_color()
-            self.cube.move_side_to_top(center_color)
-
-            logging.getLogger().debug("Checking %s to see if it has stage_top_solved is solved", side_name)
-
-            if not all(center_color == corner_color for corner_color in
-                       [self.cube.top.cubies[0][0], self.cube.top.cubies[0][2],
-                        self.cube.top.cubies[2][0], self.cube.top.cubies[2][2]]):
-                # go to next candidate; this one was a loss
-                continue
-
-            found = all(side.cubies[0][0] == side.get_center_color() and
-                        side.cubies[0][2] == side.get_center_color() for side in
-                        [self.cube.back, self.cube.front, self.cube.left, self.cube.right])
-            logging.getLogger().debug("Side %s stage_top_solved %s", side_name, "solved" if found else "unsolved")
-            self.cube.move_top_to_side(side_name)
-
-            if found:
-                self.top_solved_candidates.append(side_name)
-
-        return len(self.top_solved_candidates) > 0
-
-
 class TopCornerSolver(object):
 
     def __init__(self, cube, top_color=WHITE):
@@ -210,6 +100,7 @@ class TopCornerSolver(object):
     coords are a tuple of coordinates to a cubie location on the bottom row
     of the front side that has the top_color on the face of that location
     """
+
     def solve_corner_on_front_bottom_row(self, coords):
         adjacent_sides = {(2, 0): (Cube.LEFT, Cube.FRONT),
                           (2, 2): (Cube.FRONT, Cube.RIGHT)}[coords]
@@ -264,6 +155,7 @@ class TopCornerSolver(object):
     coords are a tuple of coordinates to a cubie location on the top row
     of the front side that has the top_color on the face at the candidate_coords
     """
+
     def solve_corners_on_front_top_row(self, candidate_coords):
         adjacent_sides = {(0, 0): (Cube.LEFT, Cube.FRONT),
                           (0, 2): (Cube.FRONT, Cube.RIGHT)}[candidate_coords]
@@ -574,6 +466,7 @@ class TopCrossSolver(object):
     solve a cross_piece where the top-color on the bottom side at 
     candidate_coordinates to its location on the top
     """
+
     def solve_cross_piece_on_bottom(self, candidate_coordinates):
         coordinates_to_adj_side = {(0, 1): Cube.FRONT,
                                    (1, 0): Cube.LEFT,
@@ -590,6 +483,7 @@ class TopCrossSolver(object):
     destination side that has the same center-color as the adjacent color
     of the cross piece
     """
+
     def move_bottom_cross_piece_into_place(self, adj_side_name, destination_side_name):
         # rotate bottom so that candidate is lined up with correct color
         if adj_side_name != destination_side_name:
@@ -625,6 +519,7 @@ class TopCrossSolver(object):
     solve for a cross piece given candidate_coordinates that is for a piece on the front side
     that is of top color
     """
+
     def solve_cross_piece_on_front(self, candidate_coordinates):
         if (0, 1) == candidate_coordinates:
             adj_color = self.cube.top.cubies[2][1]
@@ -702,3 +597,167 @@ class TopCrossSolver(object):
             for manipulation in manipulations:
                 manipulation()
             return
+
+
+class SecondRowSolver(object):
+
+    # top_color: indicates the color of side of the cube from which we began solving
+    #            (although it might not be on the top here because we flip the cube)
+    # bottom_color: indicates color of the side cube opposite top_color, but it should
+    #               will be on top for this solver, so bit of a misnomber
+    # todo: consider appropriateness of names of top_color and bottom_color
+    def __init__(self, cube, top_color=WHITE):
+        self.cube = cube
+        self.top_color = top_color
+        self.bottom_color = top_color.opposite()
+        assert TopCrossSolver(self.cube, self.top_color).is_done(), "Top not solved"
+        self.cube.move_side_to_top(self.bottom_color)
+
+    def is_done(self):
+        return all(side.get_center_color() == side.cubies[1][0] and
+                   side.get_center_color() == side.cubies[1][2]
+                   for side in [self.cube.front, self.cube.left,
+                                self.cube.right, self.cube.back])
+
+    def count_completed(self):
+        return sum(side1.get_center_color() == side1.cubies[1][2] and
+                   side2.get_center_color() == side2.cubies[1][0]
+                   for side1, side2 in [(self.cube.front, self.cube.right),
+                                        (self.cube.right, self.cube.back),
+                                        (self.cube.back, self.cube.left),
+                                        (self.cube.left, self.cube.front)])
+
+    def find_candidate(self):
+        # todo: revise to do top first
+        for top_candidate_color, side_name in [(self.cube.top.cubies[0][2], Cube.BACK),
+                                               (self.cube.top.cubies[1][0], Cube.LEFT),
+                                               (self.cube.top.cubies[1][2], Cube.RIGHT),
+                                               (self.cube.top.cubies[2][1], Cube.FRONT)]:
+            # if neither colors of the candidate is self.bottom_color, we have a candidate
+            if self.bottom_color not in {top_candidate_color, self.cube.get_side_by_name(side_name).cubies[0][1]}:
+                return {Cube.TOP, side_name}
+
+        # check sides
+        for side1, side2 in [(self.cube.front, self.cube.right),
+                             (self.cube.right, self.cube.back),
+                             (self.cube.back, self.cube.left),
+                             (self.cube.left, self.cube.front)]:
+            # discard candidate if either color on cubie is bottom color
+            if self.bottom_color in {side1.cubies[1][2], side2.cubies[1][0]}:
+                continue
+            # if either side color is not in position on its correct side
+            # then this is a valid candidate (because we already checked that neither
+            # is bottom_color)
+            if side1.get_center_color() != side1.cubies[1][2] or side2.get_center_color() != side2.cubies[1][0]:
+                return {self.cube.get_side_name(side1), self.cube.get_side_name(side2)}
+            continue
+
+
+class StageEvaluator(object):
+    STAGE_0 = 0
+    STAGE_TOP_CROSS_SOLVED = 1
+    STAGE_TOP_SOLVED = 2
+    STAGE_SOLVED = 100
+    STAGES = [STAGE_0, STAGE_TOP_CROSS_SOLVED, STAGE_SOLVED]
+
+    def __init__(self, cube):
+        self.cube = cube
+        self.stage = self.STAGE_0
+
+    def determine_stage(self):
+        self.stage = self.__determine_stage()
+        return self.stage
+
+    def is_solved(self):
+        solved = True
+        for side in self.cube.get_sides():
+            colors = [c for row in side.cubies for c in row]
+            solved = solved and all(side.get_center_color() == color for color in colors)
+        return solved
+
+    def __determine_stage(self):
+        if self.is_solved():
+            return StageEvaluator.STAGE_SOLVED
+
+        if not self.__is_top_cross_solved():
+            return StageEvaluator.STAGE_0
+
+        if not self.__is_top_solved():
+            return StageEvaluator.STAGE_TOP_CROSS_SOLVED
+
+        return StageEvaluator.STAGE_TOP_SOLVED
+
+    def __is_top_cross_solved(self):
+        # reset any stage candidates
+        self.top_cross_candidates = []
+
+        # identify any faces that are candidates for having state_1 complete
+        sides = self.cube.get_sides()
+        candidates = []
+        for side in sides:
+            side_name = self.cube.get_side_name(side)
+            logging.getLogger().debug("Checking %s to see if it has stage_1_part_1 solved", side_name)
+            center_color = side.cubies[1][1]
+            top_piece = side.cubies[0][1]
+            right_piece = side.cubies[1][2]
+            bottom_piece = side.cubies[2][1]
+            left_piece = side.cubies[1][0]
+            match = all(center_color == piece for piece in
+                        [top_piece, right_piece, bottom_piece, left_piece])
+            if match:
+                candidates.append(side)
+                logging.getLogger().debug("Side %s stage_1_part_1 solved", side_name)
+            else:
+                logging.getLogger().debug("Side %s stage_1_part_1 NOT solved", side_name)
+
+        if len(candidates) == 0:
+            return False
+
+        for candidate_side in candidates:
+            color = candidate_side.get_center_color()
+            side_name = self.cube.get_side_name_by_color(color)
+
+            logging.getLogger().debug("Checking %s to see if it has stage_top_cross_solved is solved", side_name)
+
+            self.cube.move_side_to_top(color)
+
+            found = all(side.cubies[1][1] == side.cubies[0][1] for side in
+                        [self.cube.back, self.cube.left, self.cube.front, self.cube.right])
+            logging.getLogger().debug("Side %s stage_1_part_2 %s", side_name, "solved" if found else "unsolved")
+            self.cube.move_top_to_side(side_name)
+
+            if found:
+                self.top_cross_candidates.append(side_name)
+
+        return len(self.top_cross_candidates) > 0
+
+    def __is_top_solved(self):
+        if len(self.top_cross_candidates) == 0:
+            return False
+
+        # reset any stage candidates
+        self.top_solved_candidates = []
+
+        for side_name in self.top_cross_candidates:
+            candidate_side = self.cube.get_side_by_name(side_name)
+            center_color = candidate_side.get_center_color()
+            self.cube.move_side_to_top(center_color)
+
+            logging.getLogger().debug("Checking %s to see if it has stage_top_solved is solved", side_name)
+
+            if not all(center_color == corner_color for corner_color in
+                       [self.cube.top.cubies[0][0], self.cube.top.cubies[0][2],
+                        self.cube.top.cubies[2][0], self.cube.top.cubies[2][2]]):
+                # go to next candidate; this one was a loss
+                continue
+
+            found = all(side.cubies[0][0] == side.get_center_color() and
+                        side.cubies[0][2] == side.get_center_color() for side in
+                        [self.cube.back, self.cube.front, self.cube.left, self.cube.right])
+            logging.getLogger().debug("Side %s stage_top_solved %s", side_name, "solved" if found else "unsolved")
+            self.cube.move_top_to_side(side_name)
+
+            if found:
+                self.top_solved_candidates.append(side_name)
+
+        return len(self.top_solved_candidates) > 0
