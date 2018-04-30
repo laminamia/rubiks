@@ -2,6 +2,7 @@ import unittest
 from rubiks import *
 import logging
 import itertools
+import sys
 
 
 # self.cube is copied with the intent that no manipulation will
@@ -483,7 +484,6 @@ class TopCrossSolver(object):
     destination side that has the same center-color as the adjacent color
     of the cross piece
     """
-
     def move_bottom_cross_piece_into_place(self, adj_side_name, destination_side_name):
         # rotate bottom so that candidate is lined up with correct color
         if adj_side_name != destination_side_name:
@@ -519,7 +519,6 @@ class TopCrossSolver(object):
     solve for a cross piece given candidate_coordinates that is for a piece on the front side
     that is of top color
     """
-
     def solve_cross_piece_on_front(self, candidate_coordinates):
         if (0, 1) == candidate_coordinates:
             adj_color = self.cube.top.cubies[2][1]
@@ -604,7 +603,7 @@ class SecondRowSolver(object):
     # top_color: indicates the color of side of the cube from which we began solving
     #            (although it might not be on the top here because we flip the cube)
     # bottom_color: indicates color of the side cube opposite top_color, but it should
-    #               will be on top for this solver, so bit of a misnomber
+    #               will be on top for this solver, so bit of a misnomer
     # todo: consider appropriateness of names of top_color and bottom_color
     def __init__(self, cube, top_color=WHITE):
         self.cube = cube
@@ -628,8 +627,7 @@ class SecondRowSolver(object):
                                         (self.cube.left, self.cube.front)])
 
     def find_candidate(self):
-        # todo: revise to do top first
-        for top_candidate_color, side_name in [(self.cube.top.cubies[0][2], Cube.BACK),
+        for top_candidate_color, side_name in [(self.cube.top.cubies[0][1], Cube.BACK),
                                                (self.cube.top.cubies[1][0], Cube.LEFT),
                                                (self.cube.top.cubies[1][2], Cube.RIGHT),
                                                (self.cube.top.cubies[2][1], Cube.FRONT)]:
@@ -651,6 +649,125 @@ class SecondRowSolver(object):
             if side1.get_center_color() != side1.cubies[1][2] or side2.get_center_color() != side2.cubies[1][0]:
                 return {self.cube.get_side_name(side1), self.cube.get_side_name(side2)}
             continue
+
+    def solve(self):
+        while not self.is_done():
+            side1_name, side2_name = self.find_candidate()
+
+            print("Candidate: " + side1_name + ", " + side2_name)
+            sys.stdout.flush()
+
+            # dealing with a top piece
+            side_names = {side1_name, side2_name}
+            if Cube.TOP in side_names:
+                side_names.remove(Cube.TOP)
+                self.solve_candidate_on_top(side_names.pop())
+            else:
+                self.partially_solve_candidate_on_side((side1_name, side2_name))
+
+    def partially_solve_candidate_on_side(self, side_names):
+        # move candidate to front, left corner
+        # so that we can then move it out of the side
+        # which is required before solving it
+        side_names_to_moves = {frozenset({Cube.FRONT, Cube.RIGHT}):
+                                   [self.cube.rotate_cube_cw],
+                               frozenset({Cube.RIGHT, Cube.BACK}):
+                                   [self.cube.rotate_cube_cw, self.cube.rotate_cube_cw],
+                               frozenset({Cube.BACK, Cube.LEFT}):
+                                   [self.cube.rotate_cube_ccw],
+                               frozenset({Cube.LEFT, Cube.FRONT}):
+                                   []}
+        manipulations = side_names_to_moves(frozenset(side_names))
+        for manipulation in manipulation:
+            manipulation()
+
+        # moves to move the piece that is front, top row, middle
+        # into the location of the candidate so that the candidate
+        # is now on the top (which is where we need it in order
+        # to move it back to its destination)
+        self.cube.rotate_top_right()
+        self.cube.rotate_left_backward()
+        self.cube.rotate_top_left()
+        self.cube.rotate_left_forward()
+        self.cube.rotate_top_left()
+        self.cube.rotate_front_cw()
+        self.cube.rotate_top_right()
+        self.cube.rotate_front_ccw()
+
+        # although this did not actually solve the candidate, it should
+        # now be found as a top candidate and be solved using solve_candidate_on_top
+        return
+
+    def solve_candidate_on_top(self, adj_side_name):
+        top_color_coords = {Cube.FRONT: (2, 1),
+                            Cube.RIGHT: (1, 2),
+                            Cube.BACK: (0, 1),
+                            Cube.LEFT: (1, 0)}[adj_side_name]
+        top_side_color = self.cube.top.cubies[top_color_coords[0]][top_color_coords[1]]
+        adj_side_color = self.cube.get_side_by_name(adj_side_name).cubies[0][1]
+        # find the sale with the center color of the adj_side_color
+        # because we will need to align cube with that side and solve from there
+        destination_side = self.cube.get_side_by_color(adj_side_color)
+
+        # piece not in place, so turn to be aligned with destination side
+        # and then turn that side to the front
+        destination_side_name = self.cube.get_side_name(destination_side)
+        if adj_side_name != destination_side_name:
+            sides_to_manipulations = {(Cube.FRONT, Cube.RIGHT):
+                                          [self.cube.rotate_top_right, self.cube.rotate_cube_cw],
+                                      (Cube.FRONT, Cube.BACK):
+                                          [self.cube.rotate_top_right, self.cube.rotate_top_right,
+                                           self.cube.rotate_cube_cw, self.cube.rotate_cube_cw],
+                                      (Cube.FRONT, Cube.LEFT):
+                                          [self.cube.rotate_top_left, self.cube.rotate_cube_ccw],
+                                      (Cube.RIGHT, Cube.BACK):
+                                          [self.cube.rotate_top_right, self.cube.rotate_cube_cw,
+                                           self.cube.rotate_cube_cw],
+                                      (Cube.RIGHT, Cube.LEFT):
+                                          [self.cube.rotate_top_right, self.cube.rotate_top_right,
+                                           self.cube.rotate_cube_ccw],
+                                      (Cube.RIGHT, Cube.FRONT):
+                                          [self.cube.rotate_top_left],
+                                      (Cube.BACK, Cube.LEFT):
+                                          [self.cube.rotate_top_right, self.cube.rotate_cube_ccw],
+                                      (Cube.BACK, Cube.FRONT):
+                                          [self.cube.rotate_top_right, self.cube.rotate_top_right],
+                                      (Cube.BACK, Cube.RIGHT):
+                                          [self.cube.rotate_top_left, self.cube.rotate_cube_cw],
+                                      (Cube.LEFT, Cube.FRONT):
+                                          [self.cube.rotate_top_right],
+                                      (Cube.LEFT, Cube.RIGHT):
+                                          [self.cube.rotate_top_right, self.cube.rotate_top_right,
+                                           self.cube.rotate_cube_cw],
+                                      (Cube.LEFT, Cube.BACK):
+                                          [self.cube.rotate_top_left, self.cube.rotate_cube_cw,
+                                           self.cube.rotate_cube_cw]}
+            manipulations = sides_to_manipulations[(adj_side_name, destination_side_name)]
+            for manipulation in manipulations:
+                manipulation()
+
+        # the candidate is now at the top, front, middle, with the side with the same center
+        # up front - solve
+        if self.cube.left.get_center_color() == top_side_color:
+            self.cube.rotate_top_right()
+            self.cube.rotate_left_backward()
+            self.cube.rotate_top_left()
+            self.cube.rotate_left_forward()
+            self.cube.rotate_top_left()
+            self.cube.rotate_front_cw()
+            self.cube.rotate_top_right()
+            self.cube.rotate_front_ccw()
+        elif self.cube.right.get_center_color() == top_side_color:
+            self.cube.rotate_top_left()
+            self.cube.rotate_right_backward()
+            self.cube.rotate_top_right()
+            self.cube.rotate_right_forward()
+            self.cube.rotate_top_right()
+            self.cube.rotate_front_ccw()
+            self.cube.rotate_top_left()
+            self.cube.rotate_front_cw()
+        else:
+            raise AssertionError("Cube appears invalid\n" + str(self.cube))
 
 
 class StageEvaluator(object):

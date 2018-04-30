@@ -841,6 +841,43 @@ class TestSecondRowSolver(unittest.TestCase):
                        {Cube.FRONT, Cube.TOP},
                        {Cube.TOP, Cube.BACK}])
 
+    def test_solve_1(self):
+        # cube will be flipped if yellow is not already
+        # on top, so flipping beforehand to simplify my
+        # thinking as i build test cases
+        cube = Parser().parse_string_to_cube("    ROY\n" +
+                                             "    YYG\n" +
+                                             "    YRG\n" +
+                                             "YRO BGO YYB RBG\n" +
+                                             "OOY BBO YRB RGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW")
+        solver = SecondRowSolver(cube, WHITE)
+        solver.solve()
+        print(cube)
+        self.assertTrue(solver.is_done())
+
+
+    def test_solve_1(self):
+        # cube will be flipped if yellow is not already
+        # on top, so flipping beforehand to simplify my
+        # thinking as i build test cases
+        cube = Parser().parse_string_to_cube("    RYY\n" +
+                                             "    YYY\n" +
+                                             "    OBO\n" +
+                                             "BOB YOY GGR GRY\n" +
+                                             "ROG RBB YRO GGB\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW")
+        solver = SecondRowSolver(cube, WHITE)
+        solver.solve()
+        print(cube)
+        self.assertTrue(solver.is_done())
+
 
 if __name__ == '__main__':
     # logging.getLogger().setLevel(logging.DEBUG)
