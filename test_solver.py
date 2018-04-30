@@ -183,9 +183,6 @@ class TestStageEvaluator(unittest.TestCase):
                                              "    RYO")
         evaluator = StageEvaluator(cube)
         stage = evaluator.determine_stage()
-        if stage != StageEvaluator.STAGE_TOP_SOLVED:
-            print("Found solved for unsolved cube:")
-            print(cube)
         self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, stage)
         self.assertEqual(1, len(evaluator.top_cross_candidates))
         self.assertEqual(Cube.LEFT, evaluator.top_cross_candidates[0])
@@ -205,9 +202,6 @@ class TestStageEvaluator(unittest.TestCase):
 
         evaluator = StageEvaluator(cube)
         stage = evaluator.determine_stage()
-        if stage != StageEvaluator.STAGE_TOP_SOLVED:
-            print("Found solved for unsolved cube:")
-            print(cube)
         self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, stage)
         self.assertEqual(1, len(evaluator.top_cross_candidates))
         self.assertEqual(Cube.RIGHT, evaluator.top_cross_candidates[0])
@@ -227,9 +221,6 @@ class TestStageEvaluator(unittest.TestCase):
 
         evaluator = StageEvaluator(cube)
         stage = evaluator.determine_stage()
-        if stage != StageEvaluator.STAGE_TOP_SOLVED:
-            print("Found solved for unsolved cube:")
-            print(cube)
         self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, stage)
         self.assertEqual(1, len(evaluator.top_cross_candidates))
         self.assertEqual(Cube.FRONT, evaluator.top_cross_candidates[0])
@@ -249,9 +240,6 @@ class TestStageEvaluator(unittest.TestCase):
 
         evaluator = StageEvaluator(cube)
         stage = evaluator.determine_stage()
-        if stage != StageEvaluator.STAGE_TOP_SOLVED:
-            print("Found solved for unsolved cube:")
-            print(cube)
         self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, stage)
         self.assertEqual(1, len(evaluator.top_cross_candidates))
         self.assertEqual(Cube.BACK, evaluator.top_cross_candidates[0])
@@ -272,9 +260,6 @@ class TestStageEvaluator(unittest.TestCase):
 
         evaluator = StageEvaluator(cube)
         stage = evaluator.determine_stage()
-        if stage != StageEvaluator.STAGE_TOP_SOLVED:
-            print("Found solved for unsolved cube:")
-            print(cube)
         self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, stage)
         self.assertEqual(1, len(evaluator.top_cross_candidates))
         self.assertEqual(Cube.BOTTOM, evaluator.top_cross_candidates[0])
@@ -295,9 +280,6 @@ class TestStageEvaluator(unittest.TestCase):
 
         evaluator = StageEvaluator(cube)
         stage = evaluator.determine_stage()
-        if stage != StageEvaluator.STAGE_TOP_SOLVED:
-            print("Found solved for unsolved cube:")
-            print(cube)
         self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, stage)
         self.assertEqual(1, len(evaluator.top_cross_candidates))
         self.assertEqual(Cube.TOP, evaluator.top_cross_candidates[0])
@@ -539,12 +521,7 @@ class TestTopSolver(unittest.TestCase):
                                              "    WGW")
         solver = TopCornerSolver(cube, WHITE)
         solver.solve()
-        # todo develop native test rather than relying on stage evaluator
-        stage = StageEvaluator(cube).determine_stage()
-        if stage != StageEvaluator.STAGE_TOP_SOLVED:
-            print("\n", flush=True)
-            print(cube, flush=True)
-        self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, stage)
+        self.assertTrue(solver.is_done())
 
     def test_solve_2(self):
         cube = Parser().parse_string_to_cube("    WWW\n" +
@@ -558,8 +535,7 @@ class TestTopSolver(unittest.TestCase):
                                              "    YOO")
         solver = TopCornerSolver(cube, WHITE)
         solver.solve()
-        # todo develop native test rather than relying on stage evaluator
-        self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, StageEvaluator(cube).determine_stage())
+        self.assertTrue(solver.is_done())
 
     def test_solve_3(self):
         cube = Parser().parse_string_to_cube("    BWW\n" +
@@ -573,8 +549,7 @@ class TestTopSolver(unittest.TestCase):
                                              "    ORW")
         solver = TopCornerSolver(cube, WHITE)
         solver.solve()
-        # todo develop native test rather than relying on stage evaluator
-        self.assertEqual(StageEvaluator.STAGE_TOP_SOLVED, StageEvaluator(cube).determine_stage())
+        self.assertTrue(solver.is_done())
 
     def test_count_complete_corners(self):
         cube = Parser().parse_string_to_cube("    YWB\n" +
@@ -856,11 +831,9 @@ class TestSecondRowSolver(unittest.TestCase):
                                              "    WWW")
         solver = SecondRowSolver(cube, WHITE)
         solver.solve()
-        print(cube)
         self.assertTrue(solver.is_done())
 
-
-    def test_solve_1(self):
+    def test_solve_2(self):
         # cube will be flipped if yellow is not already
         # on top, so flipping beforehand to simplify my
         # thinking as i build test cases
@@ -875,7 +848,106 @@ class TestSecondRowSolver(unittest.TestCase):
                                              "    WWW")
         solver = SecondRowSolver(cube, WHITE)
         solver.solve()
-        print(cube)
+        self.assertTrue(solver.is_done())
+
+
+class TestBottomCrossSolver(unittest.TestCase):
+
+    def test_is_done(self):
+        cube = Parser().parse_string_to_cube("    BYB\n" +
+                                             "    YYR\n" +
+                                             "    RGG\n" +
+                                             "YBG YYO YYY OOR\n" +
+                                             "BBB RRR GGG OOO\n" +
+                                             "BBB RRR GGG OOO\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW")
+        solver = BottomCrossSolver(cube)
+        self.assertFalse(solver.is_done())
+
+        cube = Parser().parse_string_to_cube("       OOY\n" +
+                                             "       YYB\n" +
+                                             "       YYY\n" +
+                                             "   GGR GRO BYB RYY\n" +
+                                             "   GGG OOO BBB RRR\n" +
+                                             "   GGG OOO BBB RRR\n" +
+                                             "       WWW\n" +
+                                             "       WWW\n" +
+                                             "       WWW\n")
+        solver = BottomCrossSolver(cube)
+        self.assertFalse(solver.is_done())
+
+        cube = Parser().parse_string_to_cube("       YYR\n" +
+                                             "       YYY\n" +
+                                             "       YYY\n" +
+                                             "   BBR GGG OOY BRO\n" +
+                                             "   GGG OOO BBB RRR\n" +
+                                             "   GGG OOO BBB RRR\n" +
+                                             "       WWW\n" +
+                                             "       WWW\n" +
+                                             "       WWW\n")
+        solver = BottomCrossSolver(cube)
+        self.assertTrue(solver.is_done())
+
+    def test_solve_1(self):
+        cube = Parser().parse_string_to_cube("    BYB\n" +
+                                             "    YYR\n" +
+                                             "    RGG\n" +
+                                             "YBG YYO YYY OOR\n" +
+                                             "BBB RRR GGG OOO\n" +
+                                             "BBB RRR GGG OOO\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW")
+        solver = BottomCrossSolver(cube)
+        solver.solve()
+        print(cube, flush=True)
+        self.assertTrue(solver.is_done())
+
+    def test_solve_2(self):
+        cube = Parser().parse_string_to_cube("       YYR\n" +
+                                             "       YYY\n" +
+                                             "       YYY\n" +
+                                             "   BBR GGG OOY BRO\n" +
+                                             "   GGG OOO BBB RRR\n" +
+                                             "   GGG OOO BBB RRR\n" +
+                                             "       WWW\n" +
+                                             "       WWW\n" +
+                                             "       WWW\n")
+        solver = BottomCrossSolver(cube)
+        solver.solve()
+        print(cube, flush=True)
+        self.assertTrue(solver.is_done())
+
+    def test_solve_3(self):
+        cube = Parser().parse_string_to_cube("       YYR\n" +
+                                             "       YYY\n" +
+                                             "       YYY\n" +
+                                             "   BBR GGG OOY BRO\n" +
+                                             "   GGG OOO BBB RRR\n" +
+                                             "   GGG OOO BBB RRR\n" +
+                                             "       WWW\n" +
+                                             "       WWW\n" +
+                                             "       WWW\n")
+        solver = BottomCrossSolver(cube)
+        solver.solve()
+        print(cube, flush=True)
+        self.assertTrue(solver.is_done())
+
+    def test_solve_4(self):
+        cube = Parser().parse_string_to_cube("       OOY\n" +
+                                             "       YYB\n" +
+                                             "       YYY\n" +
+                                             "   GGR GRO BYB RYY\n" +
+                                             "   GGG OOO BBB RRR\n" +
+                                             "   GGG OOO BBB RRR\n" +
+                                             "       WWW\n" +
+                                             "       WWW\n" +
+                                             "       WWW\n")
+        solver = BottomCrossSolver(cube)
+        solver.solve()
+        print(cube, flush=True)
         self.assertTrue(solver.is_done())
 
 
@@ -890,4 +962,6 @@ if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestTopSolver)
     unittest.TextTestRunner(verbosity=2).run(suite)
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSecondRowSolver)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestBottomCrossSolver)
     unittest.TextTestRunner(verbosity=2).run(suite)

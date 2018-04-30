@@ -467,7 +467,6 @@ class TopCrossSolver(object):
     solve a cross_piece where the top-color on the bottom side at 
     candidate_coordinates to its location on the top
     """
-
     def solve_cross_piece_on_bottom(self, candidate_coordinates):
         coordinates_to_adj_side = {(0, 1): Cube.FRONT,
                                    (1, 0): Cube.LEFT,
@@ -654,9 +653,6 @@ class SecondRowSolver(object):
         while not self.is_done():
             side1_name, side2_name = self.find_candidate()
 
-            print("Candidate: " + side1_name + ", " + side2_name)
-            sys.stdout.flush()
-
             # dealing with a top piece
             side_names = {side1_name, side2_name}
             if Cube.TOP in side_names:
@@ -678,7 +674,7 @@ class SecondRowSolver(object):
                                frozenset({Cube.LEFT, Cube.FRONT}):
                                    []}
         manipulations = side_names_to_moves(frozenset(side_names))
-        for manipulation in manipulation:
+        for manipulation in manipulations:
             manipulation()
 
         # moves to move the piece that is front, top row, middle
@@ -768,6 +764,105 @@ class SecondRowSolver(object):
             self.cube.rotate_front_cw()
         else:
             raise AssertionError("Cube appears invalid\n" + str(self.cube))
+
+
+class BottomCrossSolver(object):
+
+    def __init__(self, cube, top_color=WHITE):
+        self.bottom_color = top_color.opposite()
+        self.cube = cube
+        assert SecondRowSolver(cube).is_done()
+        self.cube.move_side_to_top(self.bottom_color)
+
+        self.cross_stage = BottomCrossStage({(0, 1), (1, 0), (1, 2), (2, 1)},
+                                            [])
+        self.horizontal_line_stage = BottomCrossStage({(1, 0), (1, 2)},
+                                                      [])
+        self.vertical_line_stage = BottomCrossStage({(0, 1), (2, 1)},
+                                                    [self.cube.rotate_cube_cw])
+        self.upper_left_l_stage = BottomCrossStage({(0, 1), (1, 0)},
+                                                   [])
+        self.lower_left_l_stage = BottomCrossStage({(1, 0), (2, 1)},
+                                                   [self.cube.rotate_cube_cw])
+        self.upper_right_l_stage = BottomCrossStage({(0, 1), (1, 2)},
+                                                    [self.cube.rotate_cube_ccw])
+        self.lower_right_l_stage = BottomCrossStage({(1, 2), (2, 1)},
+                                                    [self.cube.rotate_cube_cw, self.cube.rotate_cube_cw])
+        self.none_solved_stage = BottomCrossStage({}, [])
+
+        self.stages = {self.cross_stage, self.horizontal_line_stage, self.vertical_line_stage,
+                       self.upper_left_l_stage, self.upper_right_l_stage, self.lower_left_l_stage,
+                       self.lower_right_l_stage, self.none_solved_stage}
+
+        self.stage_next_move = {self.cross_stage: None,
+                                self.horizontal_line_stage: self.solve_next_step_style_fru,
+                                self.vertical_line_stage: self.solve_next_step_style_fru,
+                                self.upper_right_l_stage: self.solve_next_step_style_fur,
+                                self.upper_left_l_stage: self.solve_next_step_style_fur,
+                                self.lower_right_l_stage: self.solve_next_step_style_fur,
+                                self.lower_left_l_stage: self.solve_next_step_style_fur,
+                                self.none_solved_stage: self.solve_next_step_style_fur}
+
+    def is_done(self):
+        return all(color == self.bottom_color for color in
+                   [self.cube.top.cubies[0][1], self.cube.top.cubies[1][0],
+                    self.cube.top.cubies[1][2], self.cube.top.cubies[2][1]])
+
+    def solve(self):
+        while not self.is_done():
+            for stage in self.stages:
+                if stage.is_match_for_stage(self.cube.top):
+                    for move in stage.orient_moves:
+                        move()
+                    next_move = self.stage_next_move[stage]
+                    if next_move is not None:
+                        next_move()
+                    # start through the stages fresh
+                    break
+
+    # used for line stages
+    def solve_next_step_style_fru(self):
+        self.cube.rotate_front_cw()
+        self.cube.rotate_right_backward()
+        self.cube.rotate_top_left()
+        self.cube.rotate_right_forward()
+        self.cube.rotate_top_right()
+        self.cube.rotate_front_ccw()
+
+    # used for none_solved_stage and for all L stages
+    def solve_next_step_style_fur(self):
+        self.cube.rotate_front_cw()
+        self.cube.rotate_top_left()
+        self.cube.rotate_right_backward()
+        self.cube.rotate_top_right()
+        self.cube.rotate_right_forward()
+        self.cube.rotate_front_ccw()
+
+
+# todo implement test cases
+class BottomCrossStage(object):
+
+    # "bottom_color" is a misnomer because at this point that side is on top
+    def __init__(self, solved_coords, orient_moves, bottom_color=YELLOW, strict=True):
+        self.solved_coords = frozenset(solved_coords)
+        self.unsolved_coords = {(0, 1), (1, 0), (1, 2), (2, 1)}.difference(self.solved_coords)
+        self.orient_moves = orient_moves
+        # only the solved_coords can be bottom_color, no other parts of cross
+        self.strict = strict
+        self.bottom_color = bottom_color
+
+    def __hash__(self):
+        return hash(self.solved_coords)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.solved_coords == other.solved_coords
+
+    def is_match_for_stage(self, top_side):
+        return (all(top_side.cubies[coords[0]][coords[1]] == self.bottom_color for coords in self.solved_coords) and
+                all(top_side.cubies[coords[0]][coords[1]] != self.bottom_color for coords in self.unsolved_coords))
+
+    def __str__(self):
+        return "Stage (solved coords): " + str(self.solved_coords)
 
 
 class StageEvaluator(object):
