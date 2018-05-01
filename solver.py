@@ -434,6 +434,7 @@ class TopCrossSolver(object):
     expects candidate_coordinates to identify a center-side piece that is of 
     top-color and that is not in the correct position
     """
+
     def solve_cross_piece_on_top(self, candidate_coordinates):
 
         coords_to_adj_side = {(0, 1): Cube.BACK,
@@ -467,6 +468,7 @@ class TopCrossSolver(object):
     solve a cross_piece where the top-color on the bottom side at 
     candidate_coordinates to its location on the top
     """
+
     def solve_cross_piece_on_bottom(self, candidate_coordinates):
         coordinates_to_adj_side = {(0, 1): Cube.FRONT,
                                    (1, 0): Cube.LEFT,
@@ -483,6 +485,7 @@ class TopCrossSolver(object):
     destination side that has the same center-color as the adjacent color
     of the cross piece
     """
+
     def move_bottom_cross_piece_into_place(self, adj_side_name, destination_side_name):
         # rotate bottom so that candidate is lined up with correct color
         if adj_side_name != destination_side_name:
@@ -518,6 +521,7 @@ class TopCrossSolver(object):
     solve for a cross piece given candidate_coordinates that is for a piece on the front side
     that is of top color
     """
+
     def solve_cross_piece_on_front(self, candidate_coordinates):
         if (0, 1) == candidate_coordinates:
             adj_color = self.cube.top.cubies[2][1]
@@ -863,6 +867,104 @@ class BottomCrossStage(object):
 
     def __str__(self):
         return "Stage (solved coords): " + str(self.solved_coords)
+
+
+class BottomCornerSolver(object):
+
+    def __init__(self, cube, top_color=WHITE):
+        self.cube = cube
+        self.bottom_color = top_color.opposite()
+        self.cube.move_side_to_top(self.bottom_color)
+
+    def is_done(self):
+        # todo consider which is better
+        # return self.cube.top.is_side_unicolor(self.bottom_color)
+        return self.count_corners_complete() == 4
+
+    def count_corners_complete(self):
+        return sum(color == self.bottom_color for color in
+                   [self.cube.top.cubies[0][0], self.cube.top.cubies[0][2],
+                    self.cube.top.cubies[2][0], self.cube.top.cubies[2][2]])
+
+    def solve(self):
+        while not self.is_done():
+            n = self.count_corners_complete()
+            if n == 3 or n == 4:
+                print(self.cube, flush=True)
+            assert n != 3 and n != 4
+
+            setup = {0: self.no_corners_complete,
+                     1: self.one_corner_complete,
+                     2: self.two_corners_complete}[n]
+
+            setup()
+
+            self.cube.rotate_right_backward()
+            self.cube.rotate_top_left()
+            self.cube.rotate_right_forward()
+            self.cube.rotate_top_left()
+            self.cube.rotate_right_backward()
+            self.cube.rotate_top_left()
+            self.cube.rotate_top_left()
+            self.cube.rotate_right_forward()
+
+
+    # move cube into position for next move when no corners complete
+    def no_corners_complete(self):
+        # must orient so that when face forward, there is a bottom_color
+        # at left.cubies[0][2]
+        if self.cube.left.cubies[0][2] == self.bottom_color:
+            return
+
+        candidate = next(filter(self.filter_is_color_at_top_right, [self.cube.front,
+                                                                    self.cube.right,
+                                                                    self.cube.back]))
+        rotations = {Cube.FRONT: [self.cube.rotate_cube_cw],
+                     Cube.BACK: [self.cube.rotate_cube_ccw],
+                     Cube.RIGHT: [self.cube.rotate_cube_cw,
+                                  self.cube.rotate_cube_cw]}[self.cube.get_side_name(candidate)]
+        for rotation in rotations:
+            rotation()
+
+    # move cube into position for next move when one corners complete
+    def one_corner_complete(self):
+        # must orient so that single completed corner is at [2][0] (or bottom left of top side)
+        if self.cube.top.cubies[2][0] == self.bottom_color:
+            return
+
+        coords_candidate = next(filter(self.filter_is_color_at_top_at_coords, [(0, 0), (0, 2), (2, 2)]))
+        rotations = {(0, 0): [self.cube.rotate_cube_ccw],
+                     (0, 2): [self.cube.rotate_cube_cw, self.cube.rotate_cube_cw],
+                     (2, 2): [self.cube.rotate_cube_cw]}[coords_candidate]
+
+        for rotation in rotations:
+            rotation()
+
+    # move cube into position for next move when no corners complete
+    def two_corners_complete(self):
+        # must orient so that when face forward, there is a bottom_color
+        # at front.cubies[0][0]
+        if self.cube.front.cubies[0][0] == self.bottom_color:
+            return
+
+        candidate = next(filter(self.filter_is_color_at_top_left, [self.cube.front,
+                                                                   self.cube.right,
+                                                                   self.cube.back]))
+        rotations = {Cube.LEFT: [self.cube.rotate_cube_ccw],
+                     Cube.RIGHT: [self.cube.rotate_cube_cw],
+                     Cube.BACK: [self.cube.rotate_cube_cw,
+                                 self.cube.rotate_cube_cw]}[self.cube.get_side_name(candidate)]
+        for rotation in rotations:
+            rotation()
+
+    def filter_is_color_at_top_right(self, side):
+        return side.cubies[0][2] == self.bottom_color
+
+    def filter_is_color_at_top_left(self, side):
+        return side.cubies[0][0] == self.bottom_color
+
+    def filter_is_color_at_top_at_coords(self, coords):
+        return self.cube.top.get_color_by_coords(coords) == self.bottom_color
 
 
 class StageEvaluator(object):

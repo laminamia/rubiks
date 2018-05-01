@@ -396,8 +396,10 @@ class Side(object):
             column.append(self.cubies[i][col_idx])
         return column
 
-    def is_side_unicolor(self):
-        return all(c == self.cubies[0][0] for c in itertools.chain(*self.cubies))
+    def is_side_unicolor(self, color=None):
+        if color is None:
+            color = self.get_center_color()
+        return all(c == color for c in itertools.chain(*self.cubies))
 
     def rotate_face_colors_ccw(self):
         # rotate turned face pieces - middles

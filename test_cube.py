@@ -656,6 +656,11 @@ class TestSide(unittest.TestCase):
                    [RED, RED, RED],
                    [RED, RED, RED]])
         self.assertTrue(side.is_side_unicolor())
+        self.assertFalse(side.is_side_unicolor(BLUE))
+        side = Side([[RED, RED, RED],
+                     [RED, RED, RED],
+                     [RED, RED, BLUE]])
+        self.assertFalse(side.is_side_unicolor())
 
 
 if __name__ == '__main__':
