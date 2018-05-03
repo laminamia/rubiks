@@ -950,221 +950,169 @@ class TestBottomCrossSolver(unittest.TestCase):
 class TestBottomCornerSolver(unittest.TestCase):
 
     def test_is_done(self):
-        cube = Parser().parse_string_to_cube("       OOY\n" +
-                                             "       YYB\n" +
-                                             "       YYY\n" +
-                                             "   GGR GRO BYB RYY\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
+        cube = Parser().parse_string_to_cube("    GYR\n" +
+                                             "    YYY\n" +
+                                             "    BYR\n" +
+                                             "YOY ORY BGG YBO\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
         solver = BottomCornerSolver(cube)
         self.assertFalse(solver.is_done())
 
-        cube = Parser().parse_string_to_cube("       YYY\n" +
-                                             "       YYY\n" +
-                                             "       YYR\n" +
-                                             "   BGG OOY BBR GRO\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
+        cube = Parser().parse_string_to_cube("    BYO\n" +
+                                             "    YYY\n" +
+                                             "    YYG\n" +
+                                             "YRR GBO YGB YOR\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
         solver = BottomCornerSolver(cube)
         self.assertFalse(solver.is_done())
 
-        cube = Parser().parse_string_to_cube("       YYY\n" +
-                                             "       YYY\n" +
-                                             "       YYY\n" +
-                                             "   BBB RRR GGG OOO\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "OGO BBB ROR GRG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
         solver = BottomCornerSolver(cube)
         self.assertTrue(solver.is_done())
 
     def test_count_corners_complete(self):
-        cube = Parser().parse_string_to_cube("       OOY\n" +
-                                             "       YYB\n" +
-                                             "       YYY\n" +
-                                             "   GGR GRO BYB RYY\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
-        solver = BottomCornerSolver(cube)
-        self.assertEquals(3, solver.count_corners_complete())
-
-        cube = Parser().parse_string_to_cube("       YYY\n" +
-                                             "       YYY\n" +
-                                             "       YYR\n" +
-                                             "   BGG OOY BBR GRO\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
-        solver = BottomCornerSolver(cube)
-        self.assertEquals(3, solver.count_corners_complete())
-
-        cube = Parser().parse_string_to_cube("       YYY\n" +
-                                             "       YYY\n" +
-                                             "       YYY\n" +
-                                             "   BBB RRR GGG OOO\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
-        solver = BottomCornerSolver(cube)
-        self.assertEquals(4, solver.count_corners_complete())
-
-        cube = Parser().parse_string_to_cube("       BYO\n" +
-                                             "       YYY\n" +
-                                             "       GYY\n" +
-                                             "   YBO YOR GRB YGR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
-        solver = BottomCornerSolver(cube)
-        self.assertEquals(1, solver.count_corners_complete())
-
-        cube = Parser().parse_string_to_cube("       YYR\n" +
-                                             "       YYY\n" +
-                                             "       RYY\n" +
-                                             "   BBG YOG ORY BGO\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
-        solver = BottomCornerSolver(cube)
-        self.assertEquals(2, solver.count_corners_complete())
-
-        cube = Parser().parse_string_to_cube("       YYY\n" +
-                                             "       YYY\n" +
-                                             "       OYG\n" +
-                                             "   OGB RBB YRY ROG\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
-        solver = BottomCornerSolver(cube)
-        self.assertEquals(2, solver.count_corners_complete())
-
-        cube = Parser().parse_string_to_cube("       GYR\n" +
-                                             "       YYY\n" +
-                                             "       RYB\n" +
-                                             "   ORG YGO YBY BOY\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
+        cube = Parser().parse_string_to_cube("    GYR\n" +
+                                             "    YYY\n" +
+                                             "    BYR\n" +
+                                             "YOY ORY BGG YBO\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
         solver = BottomCornerSolver(cube)
         self.assertEquals(0, solver.count_corners_complete())
 
+        cube = Parser().parse_string_to_cube("    BYO\n" +
+                                             "    YYY\n" +
+                                             "    YYG\n" +
+                                             "YRR GBO YGB YOR\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerSolver(cube)
+        self.assertEquals(1, solver.count_corners_complete())
+
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "OGO BBB ROR GRG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerSolver(cube)
+        self.assertEquals(4, solver.count_corners_complete())
+
+        cube = Parser().parse_string_to_cube("    OYR\n" +
+                                             "    YYY\n" +
+                                             "    BYB\n" +
+                                             "GBY OGR YRG YOY\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerSolver(cube)
+        self.assertEquals(0, solver.count_corners_complete())
+
+        cube = Parser().parse_string_to_cube("    RYY\n" +
+                                             "    YYY\n" +
+                                             "    RYY\n" +
+                                             "BRG YBG OGO BOY\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerSolver(cube)
+        self.assertEquals(2, solver.count_corners_complete())
+
     def test_solve_1(self):
-        cube = Parser().parse_string_to_cube("       OOY\n" +
-                                             "       YYB\n" +
-                                             "       YYY\n" +
-                                             "   GGR GRO BYB RYY\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
+        cube = Parser().parse_string_to_cube("    GYR\n" +
+                                             "    YYY\n" +
+                                             "    BYR\n" +
+                                             "YOY ORY BGG YBO\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
         solver = BottomCornerSolver(cube)
         solver.solve()
         self.assertTrue(solver.is_done())
 
     def test_solve_2(self):
-        cube = Parser().parse_string_to_cube("       YYY\n" +
-                                             "       YYY\n" +
-                                             "       YYR\n" +
-                                             "   BGG OOY BBR GRO\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
+        cube = Parser().parse_string_to_cube("    BYO\n" +
+                                             "    YYY\n" +
+                                             "    YYG\n" +
+                                             "YRR GBO YGB YOR\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
         solver = BottomCornerSolver(cube)
         solver.solve()
         self.assertTrue(solver.is_done())
 
     def test_solve_3(self):
-        cube = Parser().parse_string_to_cube("       YYY\n" +
-                                             "       YYY\n" +
-                                             "       YYY\n" +
-                                             "   BBB RRR GGG OOO\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "OGO BBB ROR GRG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
         solver = BottomCornerSolver(cube)
         solver.solve()
         self.assertTrue(solver.is_done())
 
     def test_solve_4(self):
-        cube = Parser().parse_string_to_cube("       BYO\n" +
-                                             "       YYY\n" +
-                                             "       GYY\n" +
-                                             "   YBO YOR GRB YGR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
+        cube = Parser().parse_string_to_cube("    OYR\n" +
+                                             "    YYY\n" +
+                                             "    BYB\n" +
+                                             "GBY OGR YRG YOY\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
         solver = BottomCornerSolver(cube)
         solver.solve()
         self.assertTrue(solver.is_done())
 
     def test_solve_5(self):
-        cube = Parser().parse_string_to_cube("       YYR\n" +
-                                             "       YYY\n" +
-                                             "       RYY\n" +
-                                             "   BBG YOG ORY BGO\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
-        solver = BottomCornerSolver(cube)
-        solver.solve()
-        self.assertTrue(solver.is_done())
-
-    def test_solve_6(self):
-        cube = Parser().parse_string_to_cube("       YYY\n" +
-                                             "       YYY\n" +
-                                             "       OYG\n" +
-                                             "   OGB RBB YRY ROG\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
-        solver = BottomCornerSolver(cube)
-        solver.solve()
-        self.assertTrue(solver.is_done())
-
-    def test_solve_7(self):
-        cube = Parser().parse_string_to_cube("       GYR\n" +
-                                             "       YYY\n" +
-                                             "       RYB\n" +
-                                             "   ORG YGO YBY BOY\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "   GGG OOO BBB RRR\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n" +
-                                             "       WWW\n")
+        cube = Parser().parse_string_to_cube("    RYY\n" +
+                                             "    YYY\n" +
+                                             "    RYY\n" +
+                                             "BRG YBG OGO BOY\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
         solver = BottomCornerSolver(cube)
         solver.solve()
         self.assertTrue(solver.is_done())
