@@ -128,6 +128,21 @@ class Cube(object):
                 manipulation()
         return self
 
+    def move_side_to_front(self, color):
+        side_name = self.get_side_name_by_color(color)
+        if side_name == Cube.FRONT: return
+        manipulations = {
+                Cube.BOTTOM: [self.rotate_cube_backward],
+                Cube.TOP: [self.rotate_cube_forward],
+                Cube.BACK: [self.rotate_cube_cw, self.rotate_cube_cw],
+                Cube.LEFT: [self.rotate_cube_ccw],
+                Cube.RIGHT: [self.rotate_cube_cw]
+            }[side_name]
+        for manipulation in manipulations:
+            if manipulation is not None:
+                manipulation()
+        return self
+
     def move_top_to_side(self, side_name):
         manipulations = {
                 Cube.TOP: [],

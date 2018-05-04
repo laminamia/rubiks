@@ -855,15 +855,15 @@ class BottomCrossStage(object):
         self.strict = strict
         self.bottom_color = bottom_color
 
+    def is_match_for_stage(self, top_side):
+        return (all(top_side.cubies[coords[0]][coords[1]] == self.bottom_color for coords in self.solved_coords) and
+                all(top_side.cubies[coords[0]][coords[1]] != self.bottom_color for coords in self.unsolved_coords))
+
     def __hash__(self):
         return hash(self.solved_coords)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.solved_coords == other.solved_coords
-
-    def is_match_for_stage(self, top_side):
-        return (all(top_side.cubies[coords[0]][coords[1]] == self.bottom_color for coords in self.solved_coords) and
-                all(top_side.cubies[coords[0]][coords[1]] != self.bottom_color for coords in self.unsolved_coords))
 
     def __str__(self):
         return "Stage (solved coords): " + str(self.solved_coords)
@@ -907,7 +907,6 @@ class BottomCornerSolver(object):
             self.cube.rotate_top_left()
             self.cube.rotate_top_left()
             self.cube.rotate_right_forward()
-
 
     # move cube into position for next move when no corners complete
     def no_corners_complete(self):
@@ -965,6 +964,93 @@ class BottomCornerSolver(object):
 
     def filter_is_color_at_top_at_coords(self, coords):
         return self.cube.top.get_color_by_coords(coords) == self.bottom_color
+
+
+class BottomCornerPositionSolver(object):
+
+    def __init__(self, cube, top_color=WHITE):
+        assert BottomCornerSolver(cube, top_color).is_done(), "Bottom corners not yet correct color"
+
+        self.cube = cube
+        self.cube.move_side_to_top(top_color.opposite())
+
+    def is_done(self):
+        return all(side.cubies[0][0] == side.get_center_color() and side.cubies[0][2] == side.get_center_color()
+                   for side in [self.cube.front, self.cube.left, self.cube.back, self.cube.right])
+
+    def solve(self):
+        side = self.get_candidate_side()
+
+        # if no side has matching corners, must first run moves on diagonal matching corners
+        if side is None:
+            self.solve_for_diagonal_matching_corners()
+
+        # now should have one side with matching corners
+        side = self.get_candidate_side()
+        assert side is not None
+        self.solve_for_side_with_two_matching_corners(side)
+
+    # attempts to find a side that has both corners of same color
+    # if none, then returns None
+    def get_candidate_side(self):
+        for side in [self.cube.front, self.cube.left, self.cube.back, self.cube.right]:
+            if side.cubies[0][0] == side.cubies[0][2]:
+                return side
+        return None
+
+    def solve_for_diagonal_matching_corners(self):
+        diagonals = [((self.cube.left, self.cube.front), (self.cube.right, self.cube.back)),
+                     ((self.cube.front, self.cube.right), (self.cube.back, self.cube.left))]
+
+        # check opposite diagonals to see if any are in correct position
+        for diag1, diag2 in diagonals:
+            if (diag1[0].cubies[0][2] == diag1[0].get_center_color() and
+                    diag1[1].cubies[0][0] == diag1[1].get_center_color() and
+                    diag2[0].cubies[0][2] == diag2[0].get_center_color() and
+                    diag2[1].cubies[0][0] == diag2[1].get_center_color()):
+                # found a set of opposite diagonals in position, so manipulate cube
+                self.manipulate()
+                return
+
+        # did not find diagonals in correct position, so rotate top and try again
+        self.cube.rotate_top_right()
+        self.solve_for_diagonal_matching_corners()
+
+    def solve_for_side_with_two_matching_corners(self, side):
+        self.cube.move_side_to_front(side.get_center_color())
+
+        corner_color = self.cube.front.cubies[0][0]
+        matching_side_name = self.cube.get_side_name_by_color(corner_color)
+
+        # map the side that has the center color of the matching corners
+        # to the moves necessary to (a) move the corners to the side that
+        # has the same center_color as the corners and (b) move that side
+        # to the back (because the matching corners should be in the back
+        # before performing the move to match all corners
+        matching_side_to_moves = {Cube.FRONT: [self.cube.rotate_cube_cw, self.cube.rotate_cube_cw],
+                                  Cube.LEFT: [self.cube.rotate_top_left, self.cube.rotate_cube_cw],
+                                  Cube.RIGHT: [self.cube.rotate_top_right, self.cube.rotate_cube_ccw],
+                                  Cube.BACK: [self.cube.rotate_top_right, self.cube.rotate_top_right]}
+        moves = matching_side_to_moves[matching_side_name]
+        for move in moves:
+            move()
+
+        self.manipulate()
+
+    def manipulate(self):
+        self.cube.rotate_right_forward()
+        self.cube.rotate_front_cw()
+        self.cube.rotate_right_forward()
+        self.cube.rotate_back_left()
+        self.cube.rotate_back_left()
+        self.cube.rotate_right_backward()
+        self.cube.rotate_front_ccw()
+        self.cube.rotate_right_forward()
+        self.cube.rotate_back_left()
+        self.cube.rotate_back_left()
+        self.cube.rotate_right_backward()
+        self.cube.rotate_right_backward()
+        self.cube.rotate_top_right()
 
 
 class StageEvaluator(object):

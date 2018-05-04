@@ -1118,6 +1118,118 @@ class TestBottomCornerSolver(unittest.TestCase):
         self.assertTrue(solver.is_done())
 
 
+class TestBottomCornerPositionSolver(unittest.TestCase):
+
+    def test_is_done(self):
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "RGO BBR GOG ORB\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerPositionSolver(cube)
+        self.assertFalse(solver.is_done())
+
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "OOO BRB RGR GBG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerPositionSolver(cube)
+        self.assertTrue(solver.is_done())
+
+    def test_solve_1(self):
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "RGO BBR GOG ORB\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerPositionSolver(cube)
+        solver.solve()
+        self.assertTrue(solver.is_done())
+
+    def test_solve_2(self):
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "ROO BRR GGG OBB\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerPositionSolver(cube)
+        solver.solve()
+        self.assertTrue(solver.is_done())
+
+    def test_solve_2(self):
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "ROO BRR GGG OBB\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerPositionSolver(cube)
+        solver.solve()
+        self.assertTrue(solver.is_done())
+
+    def test_solve_3(self):
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "GOB RRO BGG OBR\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerPositionSolver(cube)
+        solver.solve()
+        self.assertTrue(solver.is_done())
+
+    def test_solve_4(self):
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "RRO BGG OBR GOB\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerPositionSolver(cube)
+        solver.solve()
+        self.assertTrue(solver.is_done())
+
+    def test_solve_5(self):
+        cube = Parser().parse_string_to_cube("    YYY\n" +
+                                             "    YYY\n" +
+                                             "    YYY\n" +
+                                             "OBB ROO BRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "OOO BBB RRR GGG\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n" +
+                                             "    WWW\n")
+        solver = BottomCornerPositionSolver(cube)
+        solver.solve()
+        self.assertTrue(solver.is_done())
+
+
 if __name__ == '__main__':
     # logging.getLogger().setLevel(logging.DEBUG)
     # logging.basicConfig()
@@ -1133,4 +1245,6 @@ if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBottomCrossSolver)
     unittest.TextTestRunner(verbosity=2).run(suite)
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBottomCornerSolver)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestBottomCornerPositionSolver)
     unittest.TextTestRunner(verbosity=2).run(suite)
